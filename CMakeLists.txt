@@ -19,6 +19,15 @@ include(CMakeDependentOption)
 
 find_package(Eigen3 REQUIRED)
 
+option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
+cmake_dependent_option(
+  GENERATE_PYTHON_STUBS
+  "Generate Python stubs"
+  OFF
+  BUILD_PYTHON_INTERFACE
+  ON
+)
+
 # Check if the submodule cmake have been initialized
 set(JRL_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake")
 if(EXISTS "${JRL_CMAKE_MODULES}/base.cmake")
@@ -106,6 +115,11 @@ set_target_properties(
   ${PROJECT_NAME}
   PROPERTIES LINKER_LANGUAGE CXX INSTALL_RPATH "\$ORIGIN"
 )
+
+# Bindings
+if(BUILD_PYTHON_INTERFACE)
+  add_subdirectory(bindings)
+endif()
 
 # Installation
 install(

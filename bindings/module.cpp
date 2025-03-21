@@ -8,12 +8,17 @@ namespace inekf::python
 
   /* FORWARD DECLARATIONS */
   void exposeLieGroup();
+  void exposeNoiseParams();
+  void exposeRobotState();
+  void exposeInEKF();
 
   /* PYTHON MODULE */
   BOOST_PYTHON_MODULE(inekf_pywrap)
   {
-    bp::scope().attr("__version__") = INEKF_VERSION;
     exposeLieGroup();
+    exposeNoiseParams();
+    exposeRobotState();
+    exposeInEKF();
   }
 
 } // namespace inekf::python

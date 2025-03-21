@@ -21,9 +21,9 @@
 #include <mutex>
 #endif
 #include <algorithm>
-#include "RobotState.hpp"
-#include "NoiseParams.hpp"
-#include "LieGroup.hpp"
+#include "inekf/RobotState.hpp"
+#include "inekf/NoiseParams.hpp"
+#include "inekf/LieGroup.hpp"
 
 namespace inekf {
 

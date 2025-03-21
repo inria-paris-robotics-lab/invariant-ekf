@@ -3,18 +3,16 @@ include("${JRL_CMAKE_MODULES}/stubs.cmake")
 
 ADD_PROJECT_DEPENDENCY(eigenpy 3.9.1 REQUIRED)
 
+string(REGEX REPLACE "-" "_" PY_NAME ${PROJECT_NAME})
+set(${PY_NAME}_INSTALL_DIR ${PYTHON_SITELIB}/${PY_NAME})
+
 set(
   ${PY_NAME}_SOURCES
   module.cpp
-  expose-robot-handler.cpp
-  expose-problem.cpp
-  expose-mpc.cpp
-  expose-qp.cpp
-  expose-interpolate.cpp
-  expose-centroidal.cpp
-  expose-fulldynamics.cpp
-  expose-kinodynamics.cpp
-  expose-friction-compensation.cpp
+  expose-lie-group.cpp
+  expose-noise-params.cpp
+  expose-robot-state.cpp
+  expose-inekf.cpp
 )
 
 Python3_add_library(${PY_NAME}_pywrap MODULE WITH_SOABI ${${PY_NAME}_SOURCES})
@@ -37,7 +35,7 @@ if(GENERATE_PYTHON_STUBS)
   LOAD_STUBGEN()
   GENERATE_STUBS(
     ${CMAKE_CURRENT_BINARY_DIR}
-    simple_mpc
+    inekf
     ${PYTHON_SITELIB}
     ${PY_NAME}_pywrap
   )
