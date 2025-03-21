@@ -1,130 +1,117 @@
-# Specify the minimum version for CMake
-cmake_minimum_required(VERSION 2.8.3)
-# Project's name
-project(inekf)
+cmake_minimum_required(VERSION 3.10)
 
-option(USE_CPP11 "Use flag -std=c++11" ON)
-option(USE_MUTEX "Use mutex in code" OFF)
+# Project properties
+set(PROJECT_NAME inekf)
+set(PROJECT_DESCRIPTION "Invariant EKF")
+set(PROJECT_URL https://github.com/edantec/invariant-ekf)
+set(PROJECT_CUSTOM_HEADER_DIR "inekf")
+set(PROJECT_CUSTOM_HEADER_EXTENSION "hpp")
 
-message("USE_CPP11: " ${USE_CPP11})
-message("USE_MUTEX: " ${USE_MUTEX})
+# Project configuration
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (USE_MUTEX AND NOT USE_CPP11)
-message("test")
-    message(FATAL_ERROR "You cannot have USE_CPP11 = OFF AND USE_MUTEX = ON")
-endif (USE_MUTEX AND NOT USE_CPP11)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(PROJECT_USE_CMAKE_EXPORT True)
 
-# Set compiler flags
-if (USE_CPP11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif(USE_CPP11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DEIGEN_NO_DEBUG -march=native -Wl,--no-as-needed")
-if (USE_MUTEX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DINEKF_USE_MUTEX=true")
-else (USE_MUTEX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DINEKF_USE_MUTEX=false")
-endif(USE_MUTEX)
-SET(CMAKE_CXX_COMPILER /usr/bin/g++)
+include(FetchContent)
+include(CMakeDependentOption)
 
-message("CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS})
-unset(USE_CPP11)
-unset(USE_MUTEX)
-
-# Set the output folder where your program will be created  
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-
-############################################
-#  The following folders will be included  #
-############################################
-include_directories("${PROJECT_SOURCE_DIR}/include/")
-
-# Threading
-find_package (Threads)
-
-# Boost
-find_package(Boost 1.57 REQUIRED COMPONENTS system)
-include_directories(${Boost_INCLUDE_DIR})
-message("Boost_INCLUDE_DIR: " ${Boost_INCLUDE_DIR})
-
-# Eigen 
 find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
-message("EIGEN3_INCLUDE_DIR: " ${EIGEN3_INCLUDE_DIR})
 
-# Adding all classes
-file(GLOB src_files
-    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+# Check if the submodule cmake have been initialized
+set(JRL_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake")
+if(EXISTS "${JRL_CMAKE_MODULES}/base.cmake")
+  message(STATUS "JRL cmakemodules found in 'cmake/' git submodule")
+else()
+  find_package(jrl-cmakemodules QUIET CONFIG)
+  if(jrl-cmakemodules_FOUND)
+    get_property(
+      JRL_CMAKE_MODULES
+      TARGET jrl-cmakemodules::jrl-cmakemodules
+      PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    )
+    message(STATUS "JRL cmakemodules found on system at ${JRL_CMAKE_MODULES}")
+  elseif(${CMAKE_VERSION} VERSION_LESS "3.14.0")
+    message(
+      FATAL_ERROR
+      "\nCan't find jrl-cmakemodules. Please either:\n"
+      "  - use git submodule: 'git submodule update --init'\n"
+      "  - or install https://github.com/jrl-umi3218/jrl-cmakemodules\n"
+      "  - or upgrade your CMake to >= 3.14 to allow automatic fetching\n"
+    )
+  else()
+    message(STATUS "JRL cmakemodules not found. Let's fetch it.")
+    FetchContent_Declare(
+      "jrl-cmakemodules"
+      GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git"
+    )
+    FetchContent_MakeAvailable("jrl-cmakemodules")
+    FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
+  endif()
+endif()
+
+# The following was copied over from
+# https://github.com/Simple-Robotics/aligator: Use BoostConfig module
+# distributed by boost library instead of using FindBoost module distributed by
+# CMake
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+  # find_package(SDFormat14) reset this policy (with cmake_minimum_required) and
+  # redefine the find_dependency macro. Then, futur call of this macro don't use
+  # the right version of this policy. To avoid that, we define the CMP0167
+  # default value.
+  set(CMAKE_POLICY_DEFAULT_CMP0167 NEW)
+endif()
+# JRL-cmakemodule setup
+include("${JRL_CMAKE_MODULES}/base.cmake")
+include("${JRL_CMAKE_MODULES}/boost.cmake")
+
+# Project definition
+COMPUTE_PROJECT_ARGS(PROJECT_ARGS LANGUAGES CXX)
+project(${PROJECT_NAME} ${PROJECT_ARGS})
+
+add_compile_options(-Wno-error)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(
+    CACHE CMAKE_BUILD_TYPE
+    PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo"
+  )
+endif()
+
+# Main Library
+file(GLOB iekf_SOURCE CONFIGURE_DEPENDS src/*.cpp)
+file(GLOB iekf_HEADER CONFIGURE_DEPENDS include/${PROJECT_NAME}/*.hpp)
+
+add_library(${PROJECT_NAME} SHARED ${iekf_HEADER} ${iekf_SOURCE})
+target_include_directories(
+  ${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
-######################
-#  Add Execuatables  #
-######################
-link_directories(${PROJECT_SOURCE_DIR}/${Boost_LIBRARY_DIRS})
-
-add_executable(landmarks ${PROJECT_SOURCE_DIR}/src/examples/landmarks.cpp ${src_files})
-add_executable(kinematics ${PROJECT_SOURCE_DIR}/src/examples/kinematics.cpp ${src_files})
-add_executable(propagation_speed ${PROJECT_SOURCE_DIR}/src/tests/propagation_speed.cpp ${src_files})
-add_executable(correction_speed ${PROJECT_SOURCE_DIR}/src/tests/correction_speed.cpp ${src_files})
-
-target_link_libraries(landmarks ${Boost_LIBRARIES})
-target_link_libraries(kinematics ${Boost_LIBRARIES})
-target_link_libraries(propagation_speed ${Boost_LIBRARIES})
-target_link_libraries(correction_speed ${Boost_LIBRARIES})
-
-# Create Library
-add_library(inekf SHARED
-    "${PROJECT_SOURCE_DIR}/src/InEKF.cpp"
-    "${PROJECT_SOURCE_DIR}/src/RobotState.cpp"
-    "${PROJECT_SOURCE_DIR}/src/LieGroup.cpp"
-    "${PROJECT_SOURCE_DIR}/src/NoiseParams.cpp"
+target_link_libraries(
+  ${PROJECT_NAME}
+  PUBLIC
+    Eigen3::Eigen
 )
-set_target_properties(inekf PROPERTIES LIBRARY_OUTPUT_NAME inekf)
 
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${iekf_HEADER}")
+set_target_properties(
+  ${PROJECT_NAME}
+  PROPERTIES LINKER_LANGUAGE CXX INSTALL_RPATH "\$ORIGIN"
+)
 
-
-#=============================================
-# to allow find_package() on inekf
-#=============================================
-# 
-# the following case be used in an external project requiring inekf:
-#  ...
-#  find_package(inekf) 
-#  include_directories(${inekf_INCLUDE_DIRS}) 
-#  ...
-
-# NOTE: the following will support find_package for 1) local build (make) and 2) for installed files (make install)
-
-# 1- local build #
-
-# Register the local build in case one doesn't use "make install"
-export(PACKAGE inekf)
-
-# Create variable for the local build tree
-#set_target_properties(inekf PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-get_property(inekf_include_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-get_property(inekf_library_dirs TARGET inekf PROPERTY LIBRARY_OUTPUT_DIRECTORY)
-get_property(inekf_libraries TARGET inekf PROPERTY LIBRARY_OUTPUT_NAME)
-
-message("inekf_include_dirs: " ${inekf_include_dirs})
-message("inekf_library_dirs: " ${inekf_library_dirs})
-message("inekf_libraries: " ${inekf_libraries})
-
-# Configure config file for local build tree
-configure_file(inekfConfig.cmake.in
-  "${PROJECT_BINARY_DIR}/inekfConfig.cmake" @ONLY)
-
-message("PROJECT_BINARY_DIR: " ${PROJECT_BINARY_DIR})
-
-# # 2- installation build #
-
-# # Change the include location for the case of an install location
-# set(inekf_include_dirs ${CMAKE_INSTALL_PREFIX}/include ${EIGEN_INCLUDE_DIR})
-
-# # We put the generated file for installation in a different repository (i.e., ./CMakeFiles/)
-# configure_file(inekfConfig.cmake.in
-#   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/inekfConfig.cmake" @ONLY)
-
-# install(FILES
-#   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/inekfConfig.cmake"
-#   DESTINATION share/inekf/cmake COMPONENT dev)
+# Installation
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${TARGETS_EXPORT_NAME}
+  PUBLIC_HEADER DESTINATION include/${PROJECT_NAME}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
+)
+install(FILES package.xml DESTINATION share/${PROJECT_NAME})
