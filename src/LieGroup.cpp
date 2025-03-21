@@ -11,7 +11,7 @@
  *  @date   September 25, 2018
  **/
 
-#include "LieGroup.hpp"
+#include "inekf/LieGroup.hpp"
 
 namespace inekf {
 

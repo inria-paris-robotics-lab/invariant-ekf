@@ -11,7 +11,7 @@
  *  @date   September 25, 2018
  **/
 
-#include "NoiseParams.hpp"
+#include "inekf/NoiseParams.hpp"
 
 namespace inekf {
 

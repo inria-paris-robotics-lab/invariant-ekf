@@ -11,7 +11,7 @@
  *  @date   September 25, 2018
  **/
 
-#include "InEKF.hpp"
+#include "inekf/InEKF.hpp"
 
 namespace inekf {
 
