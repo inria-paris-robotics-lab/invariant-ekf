@@ -1,5 +1,7 @@
 #include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
+#include <eigenpy/eigen-to-python.hpp>
+#include <eigenpy/eigen-from-python.hpp>
 #include "inekf/NoiseParams.hpp"
 
 namespace inekf
@@ -12,7 +14,13 @@ namespace inekf
     {
       bp::class_<NoiseParams>(
         "NoiseParams", bp::init<>())
+        .def("setGyroscopeNoise", (void (NoiseParams::*)(double)) &NoiseParams::setGyroscopeNoise)
+        .def("setGyroscopeNoise", (void (NoiseParams::*)(const Eigen::Vector3d&)) &NoiseParams::setGyroscopeNoise)
         .def("setGyroscopeNoise", (void (NoiseParams::*)(const Eigen::Matrix3d&)) &NoiseParams::setGyroscopeNoise)
+
+        .def("setGyroscopeBiasNoise", (void (NoiseParams::*)(double)) &NoiseParams::setGyroscopeBiasNoise)
+        .def("setGyroscopeBiasNoise", (void (NoiseParams::*)(const Eigen::Vector3d&)) &NoiseParams::setGyroscopeBiasNoise)
+        .def("setGyroscopeBiasNoise", (void (NoiseParams::*)(const Eigen::Matrix3d&)) &NoiseParams::setGyroscopeBiasNoise)
 
         .def("setAccelerometerNoise", (void (NoiseParams::*)(double)) &NoiseParams::setAccelerometerNoise)
         .def("setAccelerometerNoise", (void (NoiseParams::*)(const Eigen::Vector3d&)) &NoiseParams::setAccelerometerNoise)

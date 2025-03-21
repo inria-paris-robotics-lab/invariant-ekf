@@ -1,5 +1,7 @@
 #include <boost/python.hpp>
 #include <boost/python/numpy.hpp>
+#include <eigenpy/eigen-to-python.hpp>
+#include <eigenpy/eigen-from-python.hpp>
 #include <eigenpy/std-vector.hpp>
 #include "inekf/InEKF.hpp"
 

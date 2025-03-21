@@ -4,8 +4,6 @@
 namespace inekf::python
 {
 
-  namespace bp = boost::python;
-
   /* FORWARD DECLARATIONS */
   void exposeLieGroup();
   void exposeNoiseParams();
@@ -15,6 +13,9 @@ namespace inekf::python
   /* PYTHON MODULE */
   BOOST_PYTHON_MODULE(inekf_pywrap)
   {
+    namespace bp = boost::python;
+    bp::import("eigenpy");
+
     exposeLieGroup();
     exposeNoiseParams();
     exposeRobotState();

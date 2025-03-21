@@ -6,7 +6,8 @@
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <eigenpy/eigenpy.hpp>
+#include <eigenpy/eigen-to-python.hpp>
+#include <eigenpy/eigen-from-python.hpp>
 
 #include "inekf/LieGroup.hpp"
 
