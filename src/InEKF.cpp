@@ -123,7 +123,7 @@ std::map<int,bool> InEKF::getContacts() {
 
 
 // InEKF Propagation - Inertial Data
-void InEKF::Propagate(const Eigen::Matrix<double,6,1>& m, double dt) {
+void InEKF::Propagate(const Eigen::VectorXd& m, double dt) {
 
     Eigen::Vector3d w = m.head(3) - state_.getGyroscopeBias();    // Angular Velocity
     Eigen::Vector3d a = m.tail(3) - state_.getAccelerometerBias(); // Linear Acceleration

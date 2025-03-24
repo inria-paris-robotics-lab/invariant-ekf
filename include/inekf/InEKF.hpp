@@ -90,7 +90,7 @@ class InEKF {
         void setPriorLandmarks(const mapIntVector3d& prior_landmarks);
         void setContacts(std::vector<std::pair<int,bool> > contacts);
 
-        void Propagate(const Eigen::Matrix<double,6,1>& m, double dt);
+        void Propagate(const Eigen::VectorXd& m, double dt);
         void Correct(const Observation& obs);
         void CorrectLandmarks(const vectorLandmarks& measured_landmarks);
         void CorrectKinematics(const vectorKinematics& measured_kinematics);

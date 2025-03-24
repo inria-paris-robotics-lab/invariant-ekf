@@ -3,6 +3,7 @@
 #include <eigenpy/eigen-to-python.hpp>
 #include <eigenpy/eigen-from-python.hpp>
 #include <eigenpy/std-vector.hpp>
+#include <eigenpy/std-pair.hpp>
 #include "inekf/InEKF.hpp"
 
 namespace inekf
@@ -14,6 +15,10 @@ namespace inekf
 
     void exposeInEKF()
     {
+      eigenpy::StdPairConverter<std::pair<int, bool>>::registration();
+      StdVectorPythonVisitor<std::vector<std::pair<int, bool>>, true>::expose(
+          "StdVec_StdPair_intbool");
+
       bp::class_<InEKF>("InEKF")
         .def(bp::init<>())
         .def(bp::init<NoiseParams>())
