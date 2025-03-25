@@ -119,7 +119,7 @@ int main() {
             // Propagate using IMU data
             double dt = t - t_prev;
             if (dt > DT_MIN && dt < DT_MAX) {
-                filter.Propagate(imu_measurement_prev, dt);
+                filter.propagate(imu_measurement_prev, dt);
             }
         }
         else if (measurement[0].compare("LANDMARK")==0){
@@ -138,7 +138,7 @@ int main() {
             }
 
             // Correct state using landmark measurements
-            filter.CorrectLandmarks(measured_landmarks);
+            filter.correctLandmarks(measured_landmarks);
         }
 
         // Store previous timestamp

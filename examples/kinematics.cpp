@@ -97,7 +97,7 @@ int main() {
             // Propagate using IMU data
             double dt = t - t_prev;
             if (dt > DT_MIN && dt < DT_MAX) {
-                filter.Propagate(imu_measurement_prev, dt);
+                filter.propagate(imu_measurement_prev, dt);
             }
 
         }
@@ -144,7 +144,7 @@ int main() {
                 measured_kinematics.push_back(frame);
             }
             // Correct state using kinematic measurements
-            filter.CorrectKinematics(measured_kinematics);
+            filter.correctKinematics(measured_kinematics);
         }
 
         // Store previous timestamp

@@ -37,10 +37,10 @@ namespace inekf
         .def("setPriorLandmarks", &InEKF::setPriorLandmarks)
         .def("setContacts", &InEKF::setContacts)
         
-        .def("Propagate", &InEKF::Propagate)
-        .def("Correct", &InEKF::Correct)
-        .def("CorrectLandmarks", &InEKF::CorrectLandmarks)
-        .def("CorrectKinematics", &InEKF::CorrectKinematics);
+        .def("propagate", &InEKF::propagate)
+        .def("correct", &InEKF::correct)
+        .def("correctLandmarks", &InEKF::correctLandmarks)
+        .def("correctKinematics", &InEKF::correctKinematics);
     
       bp::class_<Observation>("Observation", 
          bp::init<Eigen::VectorXd&, Eigen::VectorXd&, Eigen::MatrixXd&, Eigen::MatrixXd&, Eigen::MatrixXd&>())

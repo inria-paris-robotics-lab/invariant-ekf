@@ -90,10 +90,10 @@ class InEKF {
         void setPriorLandmarks(const mapIntVector3d& prior_landmarks);
         void setContacts(std::vector<std::pair<int,bool> > contacts);
 
-        void Propagate(const Eigen::VectorXd& m, double dt);
-        void Correct(const Observation& obs);
-        void CorrectLandmarks(const vectorLandmarks& measured_landmarks);
-        void CorrectKinematics(const vectorKinematics& measured_kinematics);
+        void propagate(const Eigen::VectorXd& m, double dt);
+        void correct(const Observation& obs);
+        void correctLandmarks(const vectorLandmarks& measured_landmarks);
+        void correctKinematics(const vectorKinematics& measured_kinematics);
 
     private:
         RobotState state_;

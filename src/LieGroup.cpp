@@ -28,7 +28,7 @@ Eigen::Matrix3d skew(const Eigen::Vector3d& v) {
         return M;
 }
 
-Eigen::Matrix3d Exp_SO3(const Eigen::Vector3d& w) {
+Eigen::Matrix3d exp_SO3(const Eigen::Vector3d& w) {
     // Computes the vectorized exponential map for SO(3)
     Eigen::Matrix3d A = skew(w);
     double theta = w.norm();
@@ -39,7 +39,7 @@ Eigen::Matrix3d Exp_SO3(const Eigen::Vector3d& w) {
     return R;
 }
 
-Eigen::MatrixXd Exp_SEK3(const Eigen::VectorXd& v) {
+Eigen::MatrixXd exp_SEK3(const Eigen::VectorXd& v) {
     // Computes the vectorized exponential map for SE_K(3)
     int K = (v.size()-3)/3;
     Eigen::MatrixXd X = Eigen::MatrixXd::Identity(3+K,3+K);
@@ -68,7 +68,7 @@ Eigen::MatrixXd Exp_SEK3(const Eigen::VectorXd& v) {
     return X;
 }
 
-Eigen::MatrixXd Adjoint_SEK3(const Eigen::MatrixXd& X) {
+Eigen::MatrixXd adjoint_SEK3(const Eigen::MatrixXd& X) {
     // Compute Adjoint(X) for X in SE_K(3)
     int K = X.cols()-3;
     Eigen::MatrixXd Adj = Eigen::MatrixXd::Zero(3+3*K, 3+3*K);

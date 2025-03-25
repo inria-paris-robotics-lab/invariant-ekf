@@ -123,7 +123,7 @@ std::map<int,bool> InEKF::getContacts() {
 
 
 // InEKF Propagation - Inertial Data
-void InEKF::Propagate(const Eigen::VectorXd& m, double dt) {
+void InEKF::propagate(const Eigen::VectorXd& m, double dt) {
 
     Eigen::Vector3d w = m.head(3) - state_.getGyroscopeBias();    // Angular Velocity
     Eigen::Vector3d a = m.tail(3) - state_.getAccelerometerBias(); // Linear Acceleration
@@ -138,7 +138,7 @@ void InEKF::Propagate(const Eigen::VectorXd& m, double dt) {
 
     // Strapdown IMU motion model
     Eigen::Vector3d phi = w*dt; 
-    Eigen::Matrix3d R_pred = R * Exp_SO3(phi);
+    Eigen::Matrix3d R_pred = R * exp_SO3(phi);
     Eigen::Vector3d v_pred = v + (R*a + g_)*dt;
     Eigen::Vector3d p_pred = p + v*dt + 0.5*(R*a + g_)*dt*dt;
 
@@ -176,7 +176,7 @@ void InEKF::Propagate(const Eigen::VectorXd& m, double dt) {
     Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dimP,dimP);
     Eigen::MatrixXd Phi = I + A*dt; // Fast approximation of exp(A*dt). TODO: explore using the full exp() instead
     Eigen::MatrixXd Adj = I;
-    Adj.block(0,0,dimP-dimTheta,dimP-dimTheta) = Adjoint_SEK3(X); // Approx 200 microseconds
+    Adj.block(0,0,dimP-dimTheta,dimP-dimTheta) = adjoint_SEK3(X); // Approx 200 microseconds
     Eigen::MatrixXd PhiAdj = Phi * Adj;
     Eigen::MatrixXd Qk_hat = PhiAdj * Qk * PhiAdj.transpose() * dt; // Approximated discretized noise matrix (faster by 400 microseconds)
 
@@ -190,7 +190,7 @@ void InEKF::Propagate(const Eigen::VectorXd& m, double dt) {
 }
 
 // Correct State: Right-Invariant Observation
-void InEKF::Correct(const Observation& obs) {
+void InEKF::correct(const Observation& obs) {
     // Compute Kalman Gain
     Eigen::MatrixXd P = state_.getP();
     Eigen::MatrixXd PHT = P * obs.H.transpose();
@@ -204,7 +204,7 @@ void InEKF::Correct(const Observation& obs) {
     // Compute correction terms
     Eigen::MatrixXd Z = BigX*obs.Y - obs.b;
     Eigen::VectorXd delta = K*obs.PI*Z;
-    Eigen::MatrixXd dX = Exp_SEK3(delta.segment(0,delta.rows()-state_.dimTheta()));
+    Eigen::MatrixXd dX = exp_SEK3(delta.segment(0,delta.rows()-state_.dimTheta()));
     Eigen::VectorXd dTheta = delta.segment(delta.rows()-state_.dimTheta(), state_.dimTheta());
 
     // Update state
@@ -221,7 +221,7 @@ void InEKF::Correct(const Observation& obs) {
 }   
 
 // Create Observation from vector of landmark measurements
-void InEKF::CorrectLandmarks(const vectorLandmarks& measured_landmarks) {
+void InEKF::correctLandmarks(const vectorLandmarks& measured_landmarks) {
 #if INEKF_USE_MUTEX
     lock_guard<mutex> mlock(estimated_landmarks_mutex_);
 #endif
@@ -342,7 +342,7 @@ void InEKF::CorrectLandmarks(const vectorLandmarks& measured_landmarks) {
     // Correct state using stacked observation
     Observation obs(Y,b,H,N,PI);
     if (!obs.empty()) {
-        this->Correct(obs);
+        this->correct(obs);
     }
 
     // Augment state with newly detected landmarks
@@ -380,7 +380,7 @@ void InEKF::CorrectLandmarks(const vectorLandmarks& measured_landmarks) {
 }
 
 // Correct state using kinematics measured between imu and contact point
-void InEKF::CorrectKinematics(const vectorKinematics& measured_kinematics) {
+void InEKF::correctKinematics(const vectorKinematics& measured_kinematics) {
 #if INEKF_USE_MUTEX
     lock_guard<mutex> mlock(estimated_contacts_mutex_);
 #endif
@@ -471,7 +471,7 @@ void InEKF::CorrectKinematics(const vectorKinematics& measured_kinematics) {
     // Correct state using stacked observation
     Observation obs(Y,b,H,N,PI);
     if (!obs.empty()) {
-        this->Correct(obs);
+        this->correct(obs);
     }
 
     // Remove contacts from state
