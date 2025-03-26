@@ -113,6 +113,11 @@ void InEKF::setContacts(vector<pair<int,bool> > contacts) {
     return;
 }
 
+// Sets gravity
+void InEKF::setGravity(const Eigen::Vector3d& gravity) { 
+    g_ = gravity; 
+}
+
 // Return the filter's contact state
 std::map<int,bool> InEKF::getContacts() {
 #if INEKF_USE_MUTEX

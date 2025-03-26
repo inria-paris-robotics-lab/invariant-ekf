@@ -18,6 +18,16 @@ namespace inekf
       eigenpy::StdPairConverter<std::pair<int, bool>>::registration();
       StdVectorPythonVisitor<std::vector<std::pair<int, bool>>, true>::expose(
           "StdVec_StdPair_intbool");
+      
+      StdVectorPythonVisitor<std::vector<Kinematics, Eigen::aligned_allocator<Kinematics> >, true>::expose(
+          "StdVec_Kinematics");
+
+      bp::class_<Kinematics>("Kinematics")
+        .def(bp::init<>())
+        .def(bp::init<int, Eigen::MatrixXd&, Eigen::MatrixXd&>())
+        .def_readwrite("id", &Kinematics::id)
+        .def_readwrite("pose", &Kinematics::pose)
+        .def_readwrite("covariance", &Kinematics::covariance);
 
       bp::class_<InEKF>("InEKF")
         .def(bp::init<>())
@@ -36,6 +46,7 @@ namespace inekf
         .def("setNoiseParams", &InEKF::setNoiseParams)
         .def("setPriorLandmarks", &InEKF::setPriorLandmarks)
         .def("setContacts", &InEKF::setContacts)
+        .def("setGravity", &InEKF::setGravity)
         
         .def("propagate", &InEKF::propagate)
         .def("correct", &InEKF::correct)
@@ -51,15 +62,6 @@ namespace inekf
         .def_readwrite("H", &Observation::H)
         .def_readwrite("N", &Observation::N)
         .def_readwrite("PI", &Observation::PI);
-      
-      bp::class_<Kinematics>("Kinematics", bp::init<int, Eigen::Matrix4d, Eigen::Matrix<double,6,6>>())
-        .def_readwrite("id", &Kinematics::id)
-        .def_readwrite("pose", &Kinematics::pose)
-        .def_readwrite("covariance", &Kinematics::covariance);
-      
-      using KinematicsVec = std::vector<Kinematics>;
-      StdVectorPythonVisitor<KinematicsVec, true>::expose("StdVec_Kinematics", 
-        eigenpy::details::overload_base_get_item_for_std_vector<KinematicsVec>());
     
       bp::class_<Landmark>("Landmark", bp::init<int, Eigen::Vector3d>())
         .def_readwrite("id", &Landmark::id)

@@ -30,11 +30,15 @@ namespace inekf {
 class Kinematics {
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-        Kinematics(int id_in, Eigen::Matrix4d pose_in, Eigen::Matrix<double,6,6> covariance_in) : id(id_in), pose(pose_in), covariance(covariance_in) { }
-
+        Kinematics() {}
+        Kinematics(int id_in, 
+                   Eigen::MatrixXd& pose_in, 
+                   Eigen::MatrixXd& covariance_in) : 
+            id(id_in), pose(pose_in), covariance(covariance_in) {}
+        
         int id;
-        Eigen::Matrix4d pose;
-        Eigen::Matrix<double,6,6> covariance;
+        Eigen::MatrixXd pose;
+        Eigen::MatrixXd covariance;
 };
 
 class Landmark {
@@ -89,6 +93,7 @@ class InEKF {
         void setNoiseParams(NoiseParams params);
         void setPriorLandmarks(const mapIntVector3d& prior_landmarks);
         void setContacts(std::vector<std::pair<int,bool> > contacts);
+        void setGravity(const Eigen::Vector3d& gravity);
 
         void propagate(const Eigen::VectorXd& m, double dt);
         void correct(const Observation& obs);
@@ -98,7 +103,7 @@ class InEKF {
     private:
         RobotState state_;
         NoiseParams noise_params_;
-        const Eigen::Vector3d g_; // Gravity
+        Eigen::Vector3d g_; // Gravity
         mapIntVector3d prior_landmarks_;
         std::map<int,int> estimated_landmarks_;
         std::map<int,bool> contacts_;
