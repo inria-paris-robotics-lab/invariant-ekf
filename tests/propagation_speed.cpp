@@ -10,12 +10,16 @@
  *  @brief  Test to determine average propagation speed
  *  @date   September 25, 2018
  **/
-#include "InEKF.h"
+
+#include <boost/test/unit_test.hpp>
+
+#include "inekf/InEKF.hpp"
+#include "inekf/utils.hpp"
 #include <Eigen/Dense>
 #include <Eigen/StdVector>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <cstdlib>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -24,19 +28,13 @@
 #define DT_MIN 1e-6
 #define DT_MAX 1
 
+BOOST_AUTO_TEST_SUITE(propagation_speed)
+
 using namespace std;
 using namespace inekf;
 using namespace boost::posix_time;
 
-typedef vector<pair<double, Eigen::Matrix<double, 6, 1>>> vectorPairIntVector6d;
-typedef vector<pair<double, Eigen::Matrix<double, 6, 1>>>::const_iterator
-    vectorPairIntVector6dIterator;
-
-double stod98(const std::string &s) { return atof(s.c_str()); }
-
-int stoi98(const std::string &s) { return atoi(s.c_str()); }
-
-int main() {
+BOOST_AUTO_TEST_CASE(propagation) {
   // Initialize filter
   Eigen::MatrixXd X = Eigen::MatrixXd::Identity(10, 10);
   RobotState state(X);
@@ -80,7 +78,7 @@ int main() {
     double dt = t - t_last;
     if (dt > DT_MIN && dt < DT_MAX) {
       ptime start_time = second_clock::local_time();
-      filter.Propagate(m_last, dt);
+      filter.propagate(m_last, dt);
       ptime end_time = second_clock::local_time();
       int64_t duration = (end_time - start_time).total_nanoseconds();
       // cout << "duration: " <<  duration << endl;
@@ -96,8 +94,8 @@ int main() {
   }
 
   cout << "max duration: " << max_duration << endl;
-  cout << "average duration: " << double(sum_duration) / measurements_vec.size()
-       << endl;
-
-  return 0;
+  cout << "average duration: "
+       << double(sum_duration) / (double)measurements_vec.size() << endl;
 }
+
+BOOST_AUTO_TEST_SUITE_END()

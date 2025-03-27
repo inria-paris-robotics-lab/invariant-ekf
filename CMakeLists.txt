@@ -20,6 +20,7 @@ include(CMakeDependentOption)
 find_package(Eigen3 REQUIRED)
 
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
+option(BUILD_BENCHMARK "Build benchmarks" OFF)
 cmake_dependent_option(
     GENERATE_PYTHON_STUBS
     "Generate Python stubs"
@@ -117,6 +118,17 @@ set_target_properties(
     ${PROJECT_NAME}
     PROPERTIES LINKER_LANGUAGE CXX INSTALL_RPATH "\$ORIGIN"
 )
+
+# Unit tests
+if(BUILD_TESTING)
+    find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+    add_subdirectory(tests)
+endif()
+
+# Benchmark
+if(BUILD_BENCHMARK)
+    add_subdirectory(benchmark)
+endif()
 
 # Bindings
 if(BUILD_PYTHON_INTERFACE)

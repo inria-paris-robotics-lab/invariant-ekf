@@ -5,27 +5,24 @@
  * -------------------------------------------------------------------------- */
 
 /**
- *  @file   landmarks.cpp
+ *  @file   kinematics.cpp
  *  @author Ross Hartley
- *  @brief  Example of invariant filtering for landmark-aided inertial
- *navigation
+ *  @brief  Example of invariant filtering for contact-aided inertial navigation
  *  @date   September 25, 2018
  **/
 
-#include "InEKF.h"
+#include "inekf/InEKF.hpp"
+#include "inekf/utils.hpp"
 #include <Eigen/Dense>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #define DT_MIN 1e-6
 #define DT_MAX 1
-
-double stod98(const std::string &s) { return atof(s.c_str()); }
-
-int stoi98(const std::string &s) { return atoi(s.c_str()); }
 
 using namespace std;
 using namespace inekf;
@@ -56,7 +53,7 @@ int main() {
   noise_params.setAccelerometerNoise(0.1);
   noise_params.setGyroscopeBiasNoise(0.00001);
   noise_params.setAccelerometerBiasNoise(0.0001);
-  noise_params.setLandmarkNoise(0.1);
+  noise_params.setContactNoise(0.01);
 
   // Initialize filter
   InEKF filter(initial_state, noise_params);
@@ -65,31 +62,8 @@ int main() {
   cout << "Robot's state is initialized to: \n";
   cout << filter.getState() << endl;
 
-  // --- Optionally initialize prior landmarks --- //
-  mapIntVector3d prior_landmarks;
-  Eigen::Vector3d p_wl;
-  int id;
-
-  // Landmark 1
-  id = 1;
-  p_wl << 0, -1, 0;
-  prior_landmarks.insert(pair<int, Eigen::Vector3d>(id, p_wl));
-
-  // // Landmark 2
-  // id = 2;
-  // p_wl << 1,1,-0.5;
-  // prior_landmarks.insert(pair<int,Eigen::Vector3d> (id, p_wl));
-
-  // Landmark 3
-  id = 3;
-  p_wl << 2, -1, 0.5;
-  prior_landmarks.insert(pair<int, Eigen::Vector3d>(id, p_wl));
-
-  // Store landmarks for localization
-  filter.setPriorLandmarks(prior_landmarks);
-
   // Open data file
-  ifstream infile("../src/data/imu_landmark_measurements.txt");
+  ifstream infile("../src/data/imu_kinematic_measurements.txt");
   string line;
   Eigen::Matrix<double, 6, 1> imu_measurement =
       Eigen::Matrix<double, 6, 1>::Zero();
@@ -98,40 +72,73 @@ int main() {
   double t = 0;
   double t_prev = 0;
 
-  // Loop through data file and read in measurements line by line
+  // ---- Loop through data file and read in measurements line by line ---- //
   while (getline(infile, line)) {
     vector<string> measurement;
     boost::split(measurement, line, boost::is_any_of(" "));
-    // Handle measurements
+    // // Handle measurements
     if (measurement[0].compare("IMU") == 0) {
       cout << "Received IMU Data, propagating state\n";
       assert((measurement.size() - 2) == 6);
-      t = stoi98(measurement[1]);
-      imu_measurement << stoi98(measurement[2]), stoi98(measurement[3]),
-          stoi98(measurement[4]), stoi98(measurement[5]),
-          stoi98(measurement[6]), stoi98(measurement[7]);
+      t = atof(measurement[1].c_str());
+      // Read in IMU data
+      imu_measurement << stod98(measurement[2]), stod98(measurement[3]),
+          stod98(measurement[4]), stod98(measurement[5]),
+          stod98(measurement[6]), stod98(measurement[7]);
 
       // Propagate using IMU data
       double dt = t - t_prev;
       if (dt > DT_MIN && dt < DT_MAX) {
         filter.propagate(imu_measurement_prev, dt);
       }
-    } else if (measurement[0].compare("LANDMARK") == 0) {
-      cout << "Received LANDMARK observation, correcting state\n";
-      assert((measurement.size() - 2) % 4 == 0);
-      t = stoi98(measurement[1]);
-      vectorLandmarks measured_landmarks;
-      for (int i = 2; i < measurement.size(); i += 4) {
-        int id = stoi98(measurement[i]);
-        Eigen::Vector3d p_bl;
-        p_bl << stoi98(measurement[i + 1]), stoi98(measurement[i + 2]),
-            stoi98(measurement[i + 3]);
-        Landmark landmark(id, p_bl);
-        measured_landmarks.push_back(landmark);
-      }
 
-      // Correct state using landmark measurements
-      filter.correctLandmarks(measured_landmarks);
+    } else if (measurement[0].compare("CONTACT") == 0) {
+      cout << "Received CONTACT Data, setting filter's contact state\n";
+      assert((measurement.size() - 2) % 2 == 0);
+      vector<pair<int, bool>> contacts;
+      int id;
+      bool indicator;
+      t = stod98(measurement[1]);
+      // Read in contact data
+      for (size_t i = 2; i < measurement.size(); i += 2) {
+        id = stoi98(measurement[i]);
+        indicator = bool(stod98(measurement[i + 1]));
+        contacts.push_back(pair<int, bool>(id, indicator));
+      }
+      // Set filter's contact state
+      filter.setContacts(contacts);
+    } else if (measurement[0].compare("KINEMATIC") == 0) {
+      cout << "Received KINEMATIC observation, correcting state\n";
+      assert((measurement.size() - 2) % 44 == 0);
+      int id;
+      Eigen::Quaternion<double> q;
+      Eigen::Vector3d p;
+      Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+      Eigen::Matrix<double, 6, 6> covariance;
+      vectorKinematics measured_kinematics;
+      t = stod98(measurement[1]);
+      // Read in kinematic data
+      for (size_t i = 2; i < measurement.size(); i += 44) {
+        id = stoi98(measurement[i]);
+        q = Eigen::Quaternion<double>(
+            stod98(measurement[i + 1]), stod98(measurement[i + 2]),
+            stod98(measurement[i + 3]), stod98(measurement[i + 4]));
+        q.normalize();
+        p << stod98(measurement[i + 5]), stod98(measurement[i + 6]),
+            stod98(measurement[i + 7]);
+        pose.block<3, 3>(0, 0) = q.toRotationMatrix();
+        pose.block<3, 1>(0, 3) = p;
+        for (size_t j = 0; j < 6; ++j) {
+          for (size_t k = 0; k < 6; ++k) {
+            covariance((long)j, (long)k) =
+                stod98(measurement[i + 8 + j * 6 + k]);
+          }
+        }
+        Kinematics frame(id, pose, covariance);
+        measured_kinematics.push_back(frame);
+      }
+      // Correct state using kinematic measurements
+      filter.correctKinematics(measured_kinematics);
     }
 
     // Store previous timestamp

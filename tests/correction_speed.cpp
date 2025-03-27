@@ -11,7 +11,10 @@
  *  @date   September 25, 2018
  **/
 
-#include "InEKF.h"
+#include <boost/test/unit_test.hpp>
+
+#include "inekf/InEKF.hpp"
+#include "inekf/utils.hpp"
 #include <Eigen/Dense>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -23,19 +26,13 @@
 #define DT_MIN 1e-6
 #define DT_MAX 1
 
+BOOST_AUTO_TEST_SUITE(correction_speed)
+
 using namespace std;
 using namespace inekf;
 using namespace boost::posix_time;
 
-typedef vector<pair<double, Eigen::Matrix<double, 6, 1>>> vectorPairIntVector6d;
-typedef vector<pair<double, Eigen::Matrix<double, 6, 1>>>::const_iterator
-    vectorPairIntVector6dIterator;
-
-double stod98(const std::string &s) { return atof(s.c_str()); }
-
-int stoi98(const std::string &s) { return atoi(s.c_str()); }
-
-int main() {
+BOOST_AUTO_TEST_CASE(correction) {
   // Initialize filter
   InEKF filter;
   cout << "Robot's state is initialized to: \n";
@@ -65,8 +62,8 @@ int main() {
 
     } else if (measurement[0].compare("LANDMARK") == 0) {
       t = stod98(measurement[1]);
-      for (int i = 2; i < measurement.size(); i += 4) {
-        int id = stod98(measurement[i]);
+      for (size_t i = 2; i < measurement.size(); i += 4) {
+        int id = (int)stod98(measurement[i]);
         Eigen::Vector3d p_bl;
         p_bl << stod98(measurement[i + 1]), stod98(measurement[i + 2]),
             stod98(measurement[i + 3]);
@@ -85,7 +82,7 @@ int main() {
     m = it->second;
     double dt = t - t_last;
     if (dt > DT_MIN && dt < DT_MAX) {
-      filter.Propagate(m_last, dt);
+      filter.propagate(m_last, dt);
     }
     // Store previous timestamp
     t_last = t;
@@ -103,7 +100,7 @@ int main() {
     vectorLandmarks landmarks;
     landmarks.push_back(*it);
     ptime start_time = second_clock::local_time();
-    filter.CorrectLandmarks(landmarks);
+    filter.correctLandmarks(landmarks);
     // cout << filter.getState() << endl;
     ptime end_time = second_clock::local_time();
     int64_t duration = (end_time - start_time).total_nanoseconds();
@@ -115,6 +112,8 @@ int main() {
   cout << filter.getState() << endl;
   cout << "max duration: " << max_duration << endl;
   cout << "average duration: "
-       << double(sum_duration) / (measured_landmarks.size() / 3) << endl;
-  return 0;
+       << double(sum_duration) / ((double)measured_landmarks.size() / 3)
+       << endl;
 }
+
+BOOST_AUTO_TEST_SUITE_END()
