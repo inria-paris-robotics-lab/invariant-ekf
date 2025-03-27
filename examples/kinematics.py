@@ -11,7 +11,7 @@ initial_state = RobotState()
 
 R0 = np.array([[1, 0, 0],
                [0, -1, 0],
-               [0, 0, -1]]) # Initial rotation 
+               [0, 0, -1]]) # Initial rotation
 
 v0 = np.zeros(3) # initial velocity
 p0 = np.zeros(3) # initial position
