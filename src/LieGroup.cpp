@@ -40,7 +40,7 @@ Eigen::Matrix3d exp_SO3(const Eigen::Vector3d &w) {
 
 Eigen::MatrixXd exp_SEK3(const Eigen::VectorXd &v) {
   // Computes the vectorized exponential map for SE_K(3)
-  int K = (v.size() - 3) / 3;
+  long K = (v.size() - 3) / 3;
   Eigen::MatrixXd X = Eigen::MatrixXd::Identity(3 + K, 3 + K);
   Eigen::Matrix3d R;
   Eigen::Matrix3d Jl;
@@ -69,7 +69,7 @@ Eigen::MatrixXd exp_SEK3(const Eigen::VectorXd &v) {
 
 Eigen::MatrixXd adjoint_SEK3(const Eigen::MatrixXd &X) {
   // Compute Adjoint(X) for X in SE_K(3)
-  int K = X.cols() - 3;
+  long K = X.cols() - 3;
   Eigen::MatrixXd Adj = Eigen::MatrixXd::Zero(3 + 3 * K, 3 + 3 * K);
   Eigen::Matrix3d R = X.block<3, 3>(0, 0);
   Adj.block<3, 3>(0, 0) = R;

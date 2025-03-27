@@ -22,16 +22,16 @@ void exposeInEKF() {
 
   bp::class_<Kinematics>("Kinematics")
       .def(bp::init<>())
-      .def(bp::init<int, Eigen::MatrixXd &, Eigen::MatrixXd &>())
+      .def(bp::init<int, const Eigen::MatrixXd &, const Eigen::MatrixXd &>())
       .def_readwrite("id", &Kinematics::id)
       .def_readwrite("pose", &Kinematics::pose)
       .def_readwrite("covariance", &Kinematics::covariance);
 
   bp::class_<InEKF>("InEKF")
       .def(bp::init<>())
-      .def(bp::init<NoiseParams>())
-      .def(bp::init<RobotState>())
-      .def(bp::init<RobotState, inekf::NoiseParams>())
+      .def(bp::init<const NoiseParams &>())
+      .def(bp::init<const RobotState &>())
+      .def(bp::init<const RobotState &, const NoiseParams &>())
 
       .def("getState", &InEKF::getState)
       .def("getNoiseParams", &InEKF::getNoiseParams)
@@ -52,9 +52,9 @@ void exposeInEKF() {
       .def("correctKinematics", &InEKF::correctKinematics);
 
   bp::class_<Observation>(
-      "Observation",
-      bp::init<Eigen::VectorXd &, Eigen::VectorXd &, Eigen::MatrixXd &,
-               Eigen::MatrixXd &, Eigen::MatrixXd &>())
+      "Observation", bp::init<const Eigen::VectorXd &, const Eigen::VectorXd &,
+                              const Eigen::MatrixXd &, const Eigen::MatrixXd &,
+                              const Eigen::MatrixXd &>())
       .def("empty", &Observation::empty)
 
       .def_readwrite("Y", &Observation::Y)
@@ -63,7 +63,7 @@ void exposeInEKF() {
       .def_readwrite("N", &Observation::N)
       .def_readwrite("PI", &Observation::PI);
 
-  bp::class_<Landmark>("Landmark", bp::init<int, Eigen::Vector3d>())
+  bp::class_<Landmark>("Landmark", bp::init<int, const Eigen::Vector3d &>())
       .def_readwrite("id", &Landmark::id)
       .def_readwrite("position", &Landmark::position);
 }

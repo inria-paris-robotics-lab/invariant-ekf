@@ -20,10 +20,8 @@
 #if INEKF_USE_MUTEX
 #include <mutex>
 #endif
-#include "inekf/LieGroup.hpp"
 #include "inekf/NoiseParams.hpp"
 #include "inekf/RobotState.hpp"
-#include <algorithm>
 
 namespace inekf {
 
@@ -31,8 +29,8 @@ class Kinematics {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Kinematics() {}
-  Kinematics(int id_in, Eigen::MatrixXd &pose_in,
-             Eigen::MatrixXd &covariance_in)
+  Kinematics(int id_in, const Eigen::MatrixXd &pose_in,
+             const Eigen::MatrixXd &covariance_in)
       : id(id_in), pose(pose_in), covariance(covariance_in) {}
 
   int id;
@@ -43,7 +41,7 @@ public:
 class Landmark {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Landmark(int id_in, Eigen::Vector3d position_in)
+  Landmark(int id_in, const Eigen::Vector3d &position_in)
       : id(id_in), position(position_in) {}
 
   int id;
@@ -73,9 +71,11 @@ class Observation {
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Observation(Eigen::VectorXd &Y, Eigen::VectorXd &b, Eigen::MatrixXd &H,
-              Eigen::MatrixXd &N, Eigen::MatrixXd &PI);
-  bool empty();
+  Observation(const Eigen::VectorXd &Y, const Eigen::VectorXd &b,
+              const Eigen::MatrixXd &H, const Eigen::MatrixXd &N,
+              const Eigen::MatrixXd &PI)
+      : Y(Y), b(b), H(H), N(N), PI(PI) {}
+  bool empty() { return Y.rows() == 0; }
 
   Eigen::VectorXd Y;
   Eigen::VectorXd b;
@@ -83,26 +83,38 @@ public:
   Eigen::MatrixXd N;
   Eigen::MatrixXd PI;
 
-  friend std::ostream &operator<<(std::ostream &os, const Observation &o);
+  friend std::ostream &operator<<(std::ostream &os, const Observation &o) {
+    os << "---------- Observation ------------" << std::endl;
+    os << "Y:\n" << o.Y << std::endl << std::endl;
+    os << "b:\n" << o.b << std::endl << std::endl;
+    os << "H:\n" << o.H << std::endl << std::endl;
+    os << "N:\n" << o.N << std::endl << std::endl;
+    os << "PI:\n" << o.PI << std::endl;
+    os << "-----------------------------------";
+    return os;
+  }
 };
 
 class InEKF {
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  InEKF();
-  InEKF(NoiseParams params);
-  InEKF(RobotState state);
-  InEKF(RobotState state, NoiseParams params);
+  // Constructors
+  InEKF() {}
+  InEKF(const NoiseParams &params) : noise_params_(params) {}
+  InEKF(const RobotState &state) : state_(state) {}
+  InEKF(const RobotState &state, const NoiseParams &params)
+      : state_(state), noise_params_(params) {}
 
-  RobotState getState();
-  NoiseParams getNoiseParams();
-  mapIntVector3d getPriorLandmarks();
-  std::map<int, int> getEstimatedLandmarks();
-  std::map<int, bool> getContacts();
-  std::map<int, int> getEstimatedContactPositions();
-  void setState(RobotState state);
-  void setNoiseParams(NoiseParams params);
+  const RobotState getState();
+  const NoiseParams getNoiseParams();
+  const mapIntVector3d getPriorLandmarks();
+  const std::map<int, int> getEstimatedLandmarks();
+  const std::map<int, bool> getContacts();
+  const std::map<int, int> getEstimatedContactPositions();
+
+  void setState(const RobotState &state);
+  void setNoiseParams(const NoiseParams &params);
   void setPriorLandmarks(const mapIntVector3d &prior_landmarks);
   void setContacts(std::vector<std::pair<int, bool>> contacts);
   void setGravity(const Eigen::Vector3d &gravity);
@@ -111,11 +123,12 @@ public:
   void correct(const Observation &obs);
   void correctLandmarks(const vectorLandmarks &measured_landmarks);
   void correctKinematics(const vectorKinematics &measured_kinematics);
+  void removeRowAndColumn(Eigen::MatrixXd &M, int index);
 
 private:
   RobotState state_;
   NoiseParams noise_params_;
-  Eigen::Vector3d g_; // Gravity
+  Eigen::Vector3d g_ = Eigen::Vector3d(0, 0, -9.81); // Gravity
   mapIntVector3d prior_landmarks_;
   std::map<int, int> estimated_landmarks_;
   std::map<int, bool> contacts_;

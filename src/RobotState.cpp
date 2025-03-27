@@ -12,7 +12,6 @@
  **/
 
 #include "inekf/RobotState.hpp"
-#include "inekf/LieGroup.hpp"
 
 namespace inekf {
 
@@ -126,19 +125,19 @@ const Eigen::Vector3d RobotState::getAccelerometerBias() {
 #endif
   return Theta_.tail(3);
 }
-const int RobotState::dimX() {
+long RobotState::dimX() {
 #if INEKF_USE_MUTEX
   unique_lock<mutex> mlock(mutex_);
 #endif
   return X_.cols();
 }
-const int RobotState::dimTheta() {
+long RobotState::dimTheta() {
 #if INEKF_USE_MUTEX
   unique_lock<mutex> mlock(mutex_);
 #endif
   return Theta_.rows();
 }
-const int RobotState::dimP() {
+long RobotState::dimP() {
 #if INEKF_USE_MUTEX
   unique_lock<mutex> mlock(mutex_);
 #endif
@@ -195,9 +194,9 @@ void RobotState::setAccelerometerBias(const Eigen::Vector3d &ba) {
 }
 
 void RobotState::copyDiagX(int n, Eigen::MatrixXd &BigX) {
-  int dimX = this->dimX();
+  long dimX = this->dimX();
   for (int i = 0; i < n; ++i) {
-    int startIndex = BigX.rows();
+    long startIndex = BigX.rows();
     BigX.conservativeResize(startIndex + dimX, startIndex + dimX);
     BigX.block(startIndex, 0, dimX, startIndex) =
         Eigen::MatrixXd::Zero(dimX, startIndex);

@@ -13,6 +13,7 @@ void exposeInEKF();
 BOOST_PYTHON_MODULE(inekf_pywrap) {
   namespace bp = boost::python;
   bp::import("eigenpy");
+  ENABLE_SPECIFIC_MATRIX_TYPE(Eigen::MatrixXd);
 
   exposeLieGroup();
   exposeNoiseParams();

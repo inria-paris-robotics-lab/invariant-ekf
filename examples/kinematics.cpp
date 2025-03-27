@@ -11,7 +11,7 @@
  *  @date   September 25, 2018
  **/
 
-#include "InEKF.h"
+#include "inekf/InEKF.hpp"
 #include <Eigen/Dense>
 #include <boost/algorithm/string.hpp>
 #include <cstdlib>
@@ -121,7 +121,7 @@ int main() {
       vectorKinematics measured_kinematics;
       t = stod98(measurement[1]);
       // Read in kinematic data
-      for (int i = 2; i < measurement.size(); i += 44) {
+      for (size_t i = 2; i < measurement.size(); i += 44) {
         id = stoi98(measurement[i]);
         q = Eigen::Quaternion<double>(
             stod98(measurement[i + 1]), stod98(measurement[i + 2]),
@@ -131,9 +131,10 @@ int main() {
             stod98(measurement[i + 7]);
         pose.block<3, 3>(0, 0) = q.toRotationMatrix();
         pose.block<3, 1>(0, 3) = p;
-        for (int j = 0; j < 6; ++j) {
-          for (int k = 0; k < 6; ++k) {
-            covariance(j, k) = stod98(measurement[i + 8 + j * 6 + k]);
+        for (size_t j = 0; j < 6; ++j) {
+          for (size_t k = 0; k < 6; ++k) {
+            covariance((long)j, (long)k) =
+                stod98(measurement[i + 8 + j * 6 + k]);
           }
         }
         Kinematics frame(id, pose, covariance);

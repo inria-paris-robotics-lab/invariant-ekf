@@ -52,6 +52,7 @@ for i in range(4):
     kinematics.pose = pose_matrix
     kinematics.covariance = covariance
 
+    kinematics2 = Kinematics(i, pose_matrix, covariance)
     kinematics_list.append(kinematics)
 
 

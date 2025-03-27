@@ -12,66 +12,28 @@
  **/
 
 #include "inekf/InEKF.hpp"
+#include "inekf/LieGroup.hpp"
 
 namespace inekf {
 
 using namespace std;
 
-void removeRowAndColumn(Eigen::MatrixXd &M, int index);
-
-// ------------ Observation -------------
-// Default constructor
-Observation::Observation(Eigen::VectorXd &Y, Eigen::VectorXd &b,
-                         Eigen::MatrixXd &H, Eigen::MatrixXd &N,
-                         Eigen::MatrixXd &PI)
-    : Y(Y), b(b), H(H), N(N), PI(PI) {}
-
-// Check if empty
-bool Observation::empty() { return Y.rows() == 0; }
-
-ostream &operator<<(ostream &os, const Observation &o) {
-  os << "---------- Observation ------------" << endl;
-  os << "Y:\n" << o.Y << endl << endl;
-  os << "b:\n" << o.b << endl << endl;
-  os << "H:\n" << o.H << endl << endl;
-  os << "N:\n" << o.N << endl << endl;
-  os << "PI:\n" << o.PI << endl;
-  os << "-----------------------------------";
-  return os;
-}
-
-// ------------ InEKF -------------
-// Default constructor
-InEKF::InEKF() : g_((Eigen::VectorXd(3) << 0, 0, -9.81).finished()) {}
-
-// Constructor with noise params
-InEKF::InEKF(NoiseParams params)
-    : g_((Eigen::VectorXd(3) << 0, 0, -9.81).finished()),
-      noise_params_(params) {}
-
-// Constructor with initial state
-InEKF::InEKF(RobotState state)
-    : g_((Eigen::VectorXd(3) << 0, 0, -9.81).finished()), state_(state) {}
-
-// Constructor with initial state and noise params
-InEKF::InEKF(RobotState state, NoiseParams params)
-    : g_((Eigen::VectorXd(3) << 0, 0, -9.81).finished()), state_(state),
-      noise_params_(params) {}
-
 // Return robot's current state
-RobotState InEKF::getState() { return state_; }
+const RobotState InEKF::getState() { return state_; }
 
 // Sets the robot's current state
-void InEKF::setState(RobotState state) { state_ = state; }
+void InEKF::setState(const RobotState &state) { state_ = state; }
 
 // Return noise params
-NoiseParams InEKF::getNoiseParams() { return noise_params_; }
+const NoiseParams InEKF::getNoiseParams() { return noise_params_; }
 
 // Sets the filter's noise parameters
-void InEKF::setNoiseParams(NoiseParams params) { noise_params_ = params; }
+void InEKF::setNoiseParams(const NoiseParams &params) {
+  noise_params_ = params;
+}
 
 // Return filter's prior (static) landmarks
-mapIntVector3d InEKF::getPriorLandmarks() { return prior_landmarks_; }
+const mapIntVector3d InEKF::getPriorLandmarks() { return prior_landmarks_; }
 
 // Set the filter's prior (static) landmarks
 void InEKF::setPriorLandmarks(const mapIntVector3d &prior_landmarks) {
@@ -79,7 +41,7 @@ void InEKF::setPriorLandmarks(const mapIntVector3d &prior_landmarks) {
 }
 
 // Return filter's estimated landmarks
-map<int, int> InEKF::getEstimatedLandmarks() {
+const map<int, int> InEKF::getEstimatedLandmarks() {
 #if INEKF_USE_MUTEX
   lock_guard<mutex> mlock(estimated_landmarks_mutex_);
 #endif
@@ -87,7 +49,7 @@ map<int, int> InEKF::getEstimatedLandmarks() {
 }
 
 // Return filter's estimated landmarks
-map<int, int> InEKF::getEstimatedContactPositions() {
+const map<int, int> InEKF::getEstimatedContactPositions() {
 #if INEKF_USE_MUTEX
   lock_guard<mutex> mlock(estimated_contacts_mutex_);
 #endif
@@ -115,7 +77,7 @@ void InEKF::setContacts(vector<pair<int, bool>> contacts) {
 void InEKF::setGravity(const Eigen::Vector3d &gravity) { g_ = gravity; }
 
 // Return the filter's contact state
-std::map<int, bool> InEKF::getContacts() {
+const std::map<int, bool> InEKF::getContacts() {
 #if INEKF_USE_MUTEX
   lock_guard<mutex> mlock(estimated_contacts_mutex_);
 #endif
@@ -210,7 +172,7 @@ void InEKF::correct(const Observation &obs) {
 
   // Copy X along the diagonals if more than one measurement
   Eigen::MatrixXd BigX;
-  state_.copyDiagX(obs.Y.rows() / state_.dimX(), BigX);
+  state_.copyDiagX((int)obs.Y.rows() / state_.dimX(), BigX);
 
   // Compute correction terms
   Eigen::MatrixXd Z = BigX * obs.Y - obs.b;
@@ -269,7 +231,7 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
       // Found in prior landmark set
       int dimX = state_.dimX();
       int dimP = state_.dimP();
-      int startIndex;
+      long startIndex;
 
       // Fill out Y
       startIndex = Y.rows();
@@ -304,7 +266,7 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
 
       // Fill out PI
       startIndex = PI.rows();
-      int startIndex2 = PI.cols();
+      long startIndex2 = PI.cols();
       PI.conservativeResize(startIndex + 3, startIndex2 + dimX);
       PI.block(startIndex, 0, 3, startIndex2) =
           Eigen::MatrixXd::Zero(3, startIndex2);
@@ -319,7 +281,7 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
       // Found in estimated landmark set
       int dimX = state_.dimX();
       int dimP = state_.dimP();
-      int startIndex;
+      long startIndex;
 
       // Fill out Y
       startIndex = Y.rows();
@@ -356,7 +318,7 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
 
       // Fill out PI
       startIndex = PI.rows();
-      int startIndex2 = PI.cols();
+      long startIndex2 = PI.cols();
       PI.conservativeResize(startIndex + 3, startIndex2 + dimX);
       PI.block(startIndex, 0, 3, startIndex2) =
           Eigen::MatrixXd::Zero(3, startIndex2);
@@ -387,7 +349,7 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
     for (vectorLandmarksIterator it = new_landmarks.begin();
          it != new_landmarks.end(); ++it) {
       // Initialize new landmark mean
-      int startIndex = X_aug.rows();
+      long startIndex = X_aug.rows();
       X_aug.conservativeResize(startIndex + 1, startIndex + 1);
       X_aug.block(startIndex, 0, 1, startIndex) =
           Eigen::MatrixXd::Zero(1, startIndex);
@@ -482,7 +444,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
     } else if (contact_indicated && found) {
       int dimX = state_.dimX();
       int dimP = state_.dimP();
-      int startIndex;
+      long startIndex;
 
       // Fill out Y
       startIndex = Y.rows();
@@ -519,7 +481,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
 
       // Fill out PI
       startIndex = PI.rows();
-      int startIndex2 = PI.cols();
+      long startIndex2 = PI.cols();
       PI.conservativeResize(startIndex + 3, startIndex2 + dimX);
       PI.block(startIndex, 0, 3, startIndex2) =
           Eigen::MatrixXd::Zero(3, startIndex2);
@@ -594,7 +556,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
     for (vectorKinematicsIterator it = new_contacts.begin();
          it != new_contacts.end(); ++it) {
       // Initialize new landmark mean
-      int startIndex = X_aug.rows();
+      long startIndex = X_aug.rows();
       X_aug.conservativeResize(startIndex + 1, startIndex + 1);
       X_aug.block(startIndex, 0, 1, startIndex) =
           Eigen::MatrixXd::Zero(1, startIndex);
@@ -636,8 +598,8 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
   return;
 }
 
-void removeRowAndColumn(Eigen::MatrixXd &M, int index) {
-  unsigned int dimX = M.cols();
+void InEKF::removeRowAndColumn(Eigen::MatrixXd &M, int index) {
+  long dimX = M.cols();
   // cout << "Removing index: " << index<< endl;
   M.block(index, 0, dimX - index - 1, dimX) =
       M.bottomRows(dimX - index - 1).eval();

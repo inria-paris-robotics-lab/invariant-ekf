@@ -46,9 +46,9 @@ public:
   const Eigen::Vector3d getPosition();
   const Eigen::Vector3d getGyroscopeBias();
   const Eigen::Vector3d getAccelerometerBias();
-  const int dimX();
-  const int dimTheta();
-  const int dimP();
+  long dimX();
+  long dimTheta();
+  long dimP();
 
   void setX(const Eigen::MatrixXd &X);
   void setP(const Eigen::MatrixXd &P);

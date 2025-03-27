@@ -14,7 +14,6 @@
 #ifndef LIEGROUP_H
 #define LIEGROUP_H
 #include <Eigen/Dense>
-#include <iostream>
 
 namespace inekf {
 
