@@ -111,9 +111,9 @@ void InEKF::propagate(const Eigen::VectorXd &m, double dt) {
   state_.setPosition(p_pred);
 
   // ---- Linearized invariant error dynamics -----
-  int dimX = state_.dimX();
-  int dimP = state_.dimP();
-  int dimTheta = state_.dimTheta();
+  long dimX = state_.dimX();
+  long dimP = state_.dimP();
+  long dimTheta = state_.dimTheta();
   Eigen::MatrixXd A = Eigen::MatrixXd::Zero(dimP, dimP);
   // Inertial terms
   A.block<3, 3>(3, 0) = skew(g_); // TODO: Efficiency could be improved by not
@@ -143,8 +143,8 @@ void InEKF::propagate(const Eigen::VectorXd &m, double dt) {
 
   // Discretization
   Eigen::MatrixXd I = Eigen::MatrixXd::Identity(dimP, dimP);
-  Eigen::MatrixXd Phi = I + A * dt; // Fast approximation of exp(A*dt). TODO:
-                                    // explore using the full exp() instead
+  Eigen::MatrixXd Phi = I + A * dt + A * A * dt * dt / 2 +
+                        A * A * A * dt * dt * dt / 6; // Approximation of exp(A)
   Eigen::MatrixXd Adj = I;
   Adj.block(0, 0, dimP - dimTheta, dimP - dimTheta) =
       adjoint_SEK3(X); // Approx 200 microseconds
@@ -229,8 +229,8 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
     map<int, int>::iterator it_estimated = estimated_landmarks_.find(it->id);
     if (it_prior != prior_landmarks_.end()) {
       // Found in prior landmark set
-      int dimX = state_.dimX();
-      int dimP = state_.dimP();
+      long dimX = state_.dimX();
+      long dimP = state_.dimP();
       long startIndex;
 
       // Fill out Y
@@ -279,8 +279,8 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
     } else if (it_estimated != estimated_landmarks_.end()) {
       ;
       // Found in estimated landmark set
-      int dimX = state_.dimX();
-      int dimP = state_.dimP();
+      long dimX = state_.dimX();
+      long dimP = state_.dimP();
       long startIndex;
 
       // Fill out Y
@@ -442,8 +442,8 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       // If contact is indicated and id is found in estimated_contacts_, then
       // correct using kinematics
     } else if (contact_indicated && found) {
-      int dimX = state_.dimX();
-      int dimP = state_.dimP();
+      long dimX = state_.dimX();
+      long dimP = state_.dimP();
       long startIndex;
 
       // Fill out Y

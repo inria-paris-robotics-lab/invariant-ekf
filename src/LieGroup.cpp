@@ -31,7 +31,7 @@ Eigen::Matrix3d exp_SO3(const Eigen::Vector3d &w) {
   Eigen::Matrix3d A = skew(w);
   double theta = w.norm();
   if (theta < TOLERANCE) {
-    return Eigen::Matrix3d::Identity();
+    return Eigen::Matrix3d::Identity() + A / 2 + A * A / 6 + A * A * A / 24;
   }
   Eigen::Matrix3d R = Eigen::Matrix3d::Identity() + (sin(theta) / theta) * A +
                       ((1 - cos(theta)) / (theta * theta)) * A * A;
