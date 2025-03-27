@@ -47,12 +47,7 @@ for i in range(4):
     pose_matrix = np.eye(4)
     covariance = np.zeros((6,6))
 
-    kinematics = Kinematics()
-    kinematics.id = i
-    kinematics.pose = pose_matrix
-    kinematics.covariance = covariance
-
-    kinematics2 = Kinematics(i, pose_matrix, covariance)
+    kinematics = Kinematics(i, pose_matrix, covariance)
     kinematics_list.append(kinematics)
 
 

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(propagation) {
   cout << "Robot's state is initialized to: \n";
   cout << filter.getState() << endl;
 
-  ifstream infile("../src/data/propagation_speed_test_data.txt");
+  ifstream infile("../data/propagation_speed_test_data.txt");
   string line;
   Eigen::Matrix<double, 6, 1> m, m_last;
   double t, t_last;

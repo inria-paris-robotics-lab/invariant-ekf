@@ -3,6 +3,7 @@
 #include <boost/python/numpy.hpp>
 #include <eigenpy/eigen-from-python.hpp>
 #include <eigenpy/eigen-to-python.hpp>
+#include <eigenpy/std-map.hpp>
 #include <eigenpy/std-pair.hpp>
 #include <eigenpy/std-vector.hpp>
 
@@ -10,6 +11,7 @@ namespace inekf {
 namespace python {
 namespace bp = boost::python;
 using eigenpy::StdVectorPythonVisitor;
+using eigenpy::python::StdMapPythonVisitor;
 
 void exposeInEKF() {
   eigenpy::StdPairConverter<std::pair<int, bool>>::registration();
@@ -19,6 +21,14 @@ void exposeInEKF() {
   StdVectorPythonVisitor<
       std::vector<Kinematics, Eigen::aligned_allocator<Kinematics>>,
       true>::expose("StdVec_Kinematics");
+
+  StdMapPythonVisitor<int, int, std::less<int>,
+                      std::allocator<std::pair<const int, int>>,
+                      true>::expose("StdMap_int");
+
+  StdMapPythonVisitor<int, bool, std::less<int>,
+                      std::allocator<std::pair<const int, bool>>,
+                      true>::expose("StdMap_bool");
 
   bp::class_<Kinematics>("Kinematics")
       .def(bp::init<>())

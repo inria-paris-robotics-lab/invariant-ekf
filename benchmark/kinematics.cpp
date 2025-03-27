@@ -63,7 +63,7 @@ int main() {
   cout << filter.getState() << endl;
 
   // Open data file
-  ifstream infile("../src/data/imu_kinematic_measurements.txt");
+  ifstream infile("../data/imu_kinematic_measurements.txt");
   string line;
   Eigen::Matrix<double, 6, 1> imu_measurement =
       Eigen::Matrix<double, 6, 1>::Zero();
@@ -80,7 +80,7 @@ int main() {
     if (measurement[0].compare("IMU") == 0) {
       cout << "Received IMU Data, propagating state\n";
       assert((measurement.size() - 2) == 6);
-      t = atof(measurement[1].c_str());
+      t = stod98(measurement[1]);
       // Read in IMU data
       imu_measurement << stod98(measurement[2]), stod98(measurement[3]),
           stod98(measurement[4]), stod98(measurement[5]),

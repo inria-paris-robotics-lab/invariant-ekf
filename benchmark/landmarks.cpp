@@ -86,7 +86,7 @@ int main() {
   filter.setPriorLandmarks(prior_landmarks);
 
   // Open data file
-  ifstream infile("../src/data/imu_landmark_measurements.txt");
+  ifstream infile("../data/imu_landmark_measurements.txt");
   string line;
   Eigen::Matrix<double, 6, 1> imu_measurement =
       Eigen::Matrix<double, 6, 1>::Zero();
