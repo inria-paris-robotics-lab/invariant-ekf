@@ -106,7 +106,7 @@ public:
   InEKF(const RobotState &state, const NoiseParams &params)
       : state_(state), noise_params_(params) {}
 
-  const RobotState getState();
+  RobotState getState();
   const NoiseParams getNoiseParams();
   const mapIntVector3d getPriorLandmarks();
   const std::map<int, int> getEstimatedLandmarks();

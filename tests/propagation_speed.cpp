@@ -27,6 +27,7 @@
 
 #define DT_MIN 1e-6
 #define DT_MAX 1
+#define TOLERANCE 1e-6
 
 BOOST_AUTO_TEST_SUITE(propagation_speed)
 
@@ -75,6 +76,7 @@ BOOST_AUTO_TEST_CASE(propagation) {
     // Propagate using IMU data
     t = it->first;
     m = it->second;
+
     double dt = t - t_last;
     if (dt > DT_MIN && dt < DT_MAX) {
       ptime start_time = second_clock::local_time();
@@ -92,10 +94,18 @@ BOOST_AUTO_TEST_CASE(propagation) {
     t_last = t;
     m_last = m;
   }
-
+  cout << "final state " << filter.getState() << endl;
   cout << "max duration: " << max_duration << endl;
   cout << "average duration: "
        << double(sum_duration) / (double)measurements_vec.size() << endl;
+
+  Eigen::MatrixXd X_ref(10, 10);
+  X_ref.setIdentity();
+  X_ref.topLeftCorner(3, 5) << 0.999956, -0.00543054, -0.00764294, 0.00700324,
+      0.00289025, 0.00539822, 0.999976, -0.00424347, -0.0118462, -0.00696191,
+      0.00766581, 0.00420202, 0.999962, -9.82926, -4.91541;
+
+  BOOST_CHECK(X_ref.isApprox(filter.getState().getX(), TOLERANCE));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

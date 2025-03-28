@@ -19,7 +19,7 @@ namespace inekf {
 using namespace std;
 
 // Return robot's current state
-const RobotState InEKF::getState() { return state_; }
+RobotState InEKF::getState() { return state_; }
 
 // Sets the robot's current state
 void InEKF::setState(const RobotState &state) { state_ = state; }
