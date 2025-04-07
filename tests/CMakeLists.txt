@@ -49,7 +49,7 @@ function(add_inekf_test name)
     _add_test_prototype(${name} "" ${PROJECT_NAME})
 endfunction()
 
-set(TEST_NAMES correction_speed propagation_speed)
+set(TEST_NAMES correction_speed propagation_speed propagation_kinematics)
 
 foreach(test_name ${TEST_NAMES})
     add_inekf_test(${test_name})
