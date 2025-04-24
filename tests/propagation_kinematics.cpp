@@ -19,11 +19,11 @@
 #include <Eigen/StdVector>
 #include <boost/algorithm/string.hpp>
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <chrono>
 
 #define DT_MIN 1e-6
 #define DT_MAX 1
@@ -108,7 +108,9 @@ BOOST_AUTO_TEST_CASE(kinematics) {
         end2 = std::chrono::steady_clock::now();
       }
       nb_measures_imu += 1;
-      sum_imu += std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2).count();
+      sum_imu +=
+          std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2)
+              .count();
 
     } else if (measurement[0].compare("CONTACT") == 0) {
       // cout << "Received CONTACT Data, setting filter's contact state\n";
@@ -156,10 +158,14 @@ BOOST_AUTO_TEST_CASE(kinematics) {
         measured_kinematics.push_back(frame);
       }
       // Correct state using kinematic measurements
-      std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+      std::chrono::steady_clock::time_point begin =
+          std::chrono::steady_clock::now();
       filter.correctKinematics(measured_kinematics);
-      std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-      sum_kinematics += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+      std::chrono::steady_clock::time_point end =
+          std::chrono::steady_clock::now();
+      sum_kinematics +=
+          std::chrono::duration_cast<std::chrono::microseconds>(end - begin)
+              .count();
       nb_measures_kin += 1;
     }
 
@@ -167,7 +173,8 @@ BOOST_AUTO_TEST_CASE(kinematics) {
     t_prev = t;
     imu_measurement_prev = imu_measurement;
   }
-  double mean_kinematics_time = (double)sum_kinematics / (double)nb_measures_kin;
+  double mean_kinematics_time =
+      (double)sum_kinematics / (double)nb_measures_kin;
   double mean_imu_time = (double)sum_imu / (double)nb_measures_imu;
 
   // Final state should be

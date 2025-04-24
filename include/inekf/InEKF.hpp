@@ -17,9 +17,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#if INEKF_USE_MUTEX
-#include <mutex>
-#endif
+
 #include "inekf/NoiseParams.hpp"
 #include "inekf/RobotState.hpp"
 
@@ -133,10 +131,6 @@ private:
   std::map<int, int> estimated_landmarks_;
   std::map<int, bool> contacts_;
   std::map<int, int> estimated_contact_positions_;
-#if INEKF_USE_MUTEX
-  std::mutex estimated_contacts_mutex_;
-  std::mutex estimated_landmarks_mutex_;
-#endif
 };
 
 } // namespace inekf
