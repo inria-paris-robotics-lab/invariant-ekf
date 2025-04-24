@@ -17,13 +17,13 @@
 namespace inekf {
 
 // Return robot's current state
-RobotState InEKF::getState() { return state_; }
+const RobotState &InEKF::getState() const { return state_; }
 
 // Sets the robot's current state
 void InEKF::setState(const RobotState &state) { state_ = state; }
 
 // Return noise params
-const NoiseParams InEKF::getNoiseParams() { return noise_params_; }
+const NoiseParams &InEKF::getNoiseParams() const { return noise_params_; }
 
 // Sets the filter's noise parameters
 void InEKF::setNoiseParams(const NoiseParams &params) {
@@ -31,7 +31,9 @@ void InEKF::setNoiseParams(const NoiseParams &params) {
 }
 
 // Return filter's prior (static) landmarks
-const mapIntVector3d InEKF::getPriorLandmarks() { return prior_landmarks_; }
+const mapIntVector3d &InEKF::getPriorLandmarks() const {
+  return prior_landmarks_;
+}
 
 // Set the filter's prior (static) landmarks
 void InEKF::setPriorLandmarks(const mapIntVector3d &prior_landmarks) {
@@ -39,12 +41,12 @@ void InEKF::setPriorLandmarks(const mapIntVector3d &prior_landmarks) {
 }
 
 // Return filter's estimated landmarks
-const std::map<int, int> InEKF::getEstimatedLandmarks() {
+const std::map<int, int> InEKF::getEstimatedLandmarks() const {
   return estimated_landmarks_;
 }
 
 // Return filter's estimated landmarks
-const std::map<int, int> InEKF::getEstimatedContactPositions() {
+const std::map<int, int> InEKF::getEstimatedContactPositions() const {
   return estimated_contact_positions_;
 }
 
@@ -66,7 +68,7 @@ void InEKF::setContacts(std::vector<std::pair<int, bool>> contacts) {
 void InEKF::setGravity(const Eigen::Vector3d &gravity) { g_ = gravity; }
 
 // Return the filter's contact state
-const std::map<int, bool> InEKF::getContacts() { return contacts_; }
+const std::map<int, bool> InEKF::getContacts() const { return contacts_; }
 
 // InEKF Propagation - Inertial Data
 void InEKF::propagate(const Eigen::VectorXd &m, double dt) {
@@ -421,11 +423,12 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       // If contact is indicated and id is found in estimated_contacts_, then
       // correct using kinematics
     } else if (contact_indicated && found) {
+      // Fill out Y
       long dimX = state_.dimX();
       long dimP = state_.dimP();
       long startIndex;
+      long startIndex2;
 
-      // Fill out Y
       startIndex = Y.rows();
       Y.conservativeResize(startIndex + dimX, Eigen::NoChange);
       Y.segment(startIndex, dimX) = Eigen::VectorXd::Zero(dimX);
@@ -460,7 +463,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
 
       // Fill out PI
       startIndex = PI.rows();
-      long startIndex2 = PI.cols();
+      startIndex2 = PI.cols();
       PI.conservativeResize(startIndex + 3, startIndex2 + dimX);
       PI.block(startIndex, 0, 3, startIndex2) =
           Eigen::MatrixXd::Zero(3, startIndex2);
@@ -469,6 +472,45 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       PI.block(startIndex, startIndex2, 3, dimX) =
           Eigen::MatrixXd::Zero(3, dimX);
       PI.block(startIndex, startIndex2, 3, 3) = Eigen::Matrix3d::Identity();
+
+      // Fill out velocity measures
+      auto vel_foot = it->velocity;
+      if (!vel_foot.isZero(0)) {
+        startIndex = Y.rows();
+        Y.conservativeResize(startIndex + dimX, Eigen::NoChange);
+        Y.segment(startIndex, dimX).setZero();
+        Y.segment(startIndex, 3) = vel_foot; // v_bc
+        Y(startIndex + 3) = -1;
+
+        // Fill out b
+        startIndex = b.rows();
+        b.conservativeResize(startIndex + dimX, Eigen::NoChange);
+        b.segment(startIndex, dimX).setZero();
+        b(startIndex + 3) = -1;
+
+        // Fill out H
+        startIndex = H.rows();
+        H.conservativeResize(startIndex + 3, dimP);
+        H.block(startIndex, 0, 3, dimP).setZero();
+        H.block(startIndex, 3, 3, 3).setIdentity();
+
+        // Fill out N
+        startIndex = N.rows();
+        N.conservativeResize(startIndex + 3, startIndex + 3);
+        N.block(startIndex, 0, 3, startIndex).setZero();
+        N.block(0, startIndex, startIndex, 3).setZero();
+        N.block(startIndex, startIndex, 3, 3) =
+            R * it->covariance_vel * R.transpose();
+
+        // Fill out PI
+        startIndex = PI.rows();
+        startIndex2 = PI.cols();
+        PI.conservativeResize(startIndex + 3, startIndex2 + dimX);
+        PI.block(startIndex, 0, 3, startIndex2).setZero();
+        PI.block(0, startIndex2, startIndex, dimX).setZero();
+        PI.block(startIndex, startIndex2, 3, dimX).setZero();
+        PI.block(startIndex, startIndex2, 3, 3).setIdentity();
+      }
 
       //  If contact is not indicated and id is found in estimated_contacts_,
       //  then skip

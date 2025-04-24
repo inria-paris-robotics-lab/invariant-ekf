@@ -187,8 +187,8 @@ BOOST_AUTO_TEST_CASE(kinematics) {
   // Print final state
   cout << "final state " << filter.getState() << endl;
   BOOST_CHECK(Xref.isApprox(filter.getState().getX(), TOLERANCE));
-  std::cout << "Mean kinematics time is " << mean_kinematics_time << std::endl;
-  std::cout << "Mean imu time is " << mean_imu_time << std::endl;
+  std::cout << "Mean correct time is " << mean_kinematics_time << std::endl;
+  std::cout << "Mean propagate time is " << mean_imu_time << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

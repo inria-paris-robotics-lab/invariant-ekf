@@ -29,11 +29,23 @@ public:
   Kinematics() {}
   Kinematics(int id_in, const Eigen::MatrixXd &pose_in,
              const Eigen::MatrixXd &covariance_in)
-      : id(id_in), pose(pose_in), covariance(covariance_in) {}
+      : id(id_in), pose(pose_in), covariance(covariance_in) {
+    velocity.setZero();
+    covariance_vel.setZero();
+  }
+
+  Kinematics(int id_in, const Eigen::MatrixXd &pose_in,
+             const Eigen::MatrixXd &covariance_in,
+             const Eigen::Vector3d &velocity_in,
+             const Eigen::Matrix3d &covariance_vel_in)
+      : id(id_in), pose(pose_in), velocity(velocity_in),
+        covariance(covariance_in), covariance_vel(covariance_vel_in) {}
 
   int id;
   Eigen::MatrixXd pose;
+  Eigen::Vector3d velocity;
   Eigen::MatrixXd covariance;
+  Eigen::Matrix3d covariance_vel;
 };
 
 class Landmark {
@@ -104,12 +116,12 @@ public:
   InEKF(const RobotState &state, const NoiseParams &params)
       : state_(state), noise_params_(params) {}
 
-  RobotState getState();
-  const NoiseParams getNoiseParams();
-  const mapIntVector3d getPriorLandmarks();
-  const std::map<int, int> getEstimatedLandmarks();
-  const std::map<int, bool> getContacts();
-  const std::map<int, int> getEstimatedContactPositions();
+  const RobotState &getState() const;
+  const NoiseParams &getNoiseParams() const;
+  const mapIntVector3d &getPriorLandmarks() const;
+  const std::map<int, int> getEstimatedLandmarks() const;
+  const std::map<int, bool> getContacts() const;
+  const std::map<int, int> getEstimatedContactPositions() const;
 
   void setState(const RobotState &state);
   void setNoiseParams(const NoiseParams &params);
