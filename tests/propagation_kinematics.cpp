@@ -132,9 +132,8 @@ BOOST_AUTO_TEST_CASE(kinematics) {
       assert((measurement.size() - 2) % 44 == 0);
       int id;
       Eigen::Quaternion<double> q;
-      Eigen::Vector3d p;
-      Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
-      Eigen::Matrix<double, 6, 6> covariance;
+      Eigen::Vector3d position;
+      Eigen::Matrix3d covariance;
       vectorKinematics measured_kinematics;
       t = stod98(measurement[1]);
       // Read in kinematic data
@@ -144,17 +143,16 @@ BOOST_AUTO_TEST_CASE(kinematics) {
             stod98(measurement[i + 1]), stod98(measurement[i + 2]),
             stod98(measurement[i + 3]), stod98(measurement[i + 4]));
         q.normalize();
-        p << stod98(measurement[i + 5]), stod98(measurement[i + 6]),
+        position << stod98(measurement[i + 5]), stod98(measurement[i + 6]),
             stod98(measurement[i + 7]);
-        pose.block<3, 3>(0, 0) = q.toRotationMatrix();
-        pose.block<3, 1>(0, 3) = p;
-        for (size_t j = 0; j < 6; ++j) {
-          for (size_t k = 0; k < 6; ++k) {
-            covariance((long)j, (long)k) =
+        for (size_t j = 3; j < 6; ++j) {
+          for (size_t k = 3; k < 6; ++k) {
+            covariance((long)(j - 3), (long)(k - 3)) =
                 stod98(measurement[i + 8 + j * 6 + k]);
           }
         }
-        Kinematics frame(id, pose, covariance);
+
+        Kinematics frame(id, position, covariance);
         measured_kinematics.push_back(frame);
       }
       // Correct state using kinematic measurements

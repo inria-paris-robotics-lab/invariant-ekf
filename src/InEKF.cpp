@@ -432,7 +432,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       startIndex = Y.rows();
       Y.conservativeResize(startIndex + dimX, Eigen::NoChange);
       Y.segment(startIndex, dimX) = Eigen::VectorXd::Zero(dimX);
-      Y.segment(startIndex, 3) = it->pose.block<3, 1>(0, 3); // p_bc
+      Y.segment(startIndex, 3) = it->position; // p_bc
       Y(startIndex + 4) = 1;
       Y(startIndex + it_estimated->second) = -1;
 
@@ -459,7 +459,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       N.block(0, startIndex, startIndex, 3) =
           Eigen::MatrixXd::Zero(startIndex, 3);
       N.block(startIndex, startIndex, 3, 3) =
-          R * it->covariance.block<3, 3>(3, 3) * R.transpose();
+          R * it->covariance * R.transpose();
 
       // Fill out PI
       startIndex = PI.rows();
@@ -586,7 +586,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       X_aug.block(0, startIndex, startIndex, 1) =
           Eigen::MatrixXd::Zero(startIndex, 1);
       X_aug(startIndex, startIndex) = 1;
-      X_aug.block(0, startIndex, 3, 1) = p + R * it->pose.block<3, 1>(0, 3);
+      X_aug.block(0, startIndex, 3, 1) = p + R * it->position;
 
       // Initialize new landmark covariance - TODO:speed up
       Eigen::MatrixXd F =
@@ -605,8 +605,7 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
                                     state_.dimTheta()); // for theta
       Eigen::MatrixXd G = Eigen::MatrixXd::Zero(F.rows(), 3);
       G.block(G.rows() - state_.dimTheta() - 3, 0, 3, 3) = R;
-      P_aug = (F * P_aug * F.transpose() +
-               G * it->covariance.block<3, 3>(3, 3) * G.transpose())
+      P_aug = (F * P_aug * F.transpose() + G * it->covariance * G.transpose())
                   .eval();
 
       // Update state and covariance
