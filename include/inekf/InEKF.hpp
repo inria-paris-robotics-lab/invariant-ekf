@@ -17,9 +17,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#if INEKF_USE_MUTEX
-#include <mutex>
-#endif
+
 #include "inekf/NoiseParams.hpp"
 #include "inekf/RobotState.hpp"
 
@@ -29,13 +27,25 @@ class Kinematics {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Kinematics() {}
-  Kinematics(int id_in, const Eigen::MatrixXd &pose_in,
-             const Eigen::MatrixXd &covariance_in)
-      : id(id_in), pose(pose_in), covariance(covariance_in) {}
+  Kinematics(int id_in, const Eigen::Vector3d &position_in,
+             const Eigen::Matrix3d &covariance_in)
+      : id(id_in), position(position_in), covariance(covariance_in) {
+    velocity.setZero();
+    covariance_vel.setZero();
+  }
+
+  Kinematics(int id_in, const Eigen::Vector3d &position_in,
+             const Eigen::Matrix3d &covariance_in,
+             const Eigen::Vector3d &velocity_in,
+             const Eigen::Matrix3d &covariance_vel_in)
+      : id(id_in), position(position_in), velocity(velocity_in),
+        covariance(covariance_in), covariance_vel(covariance_vel_in) {}
 
   int id;
-  Eigen::MatrixXd pose;
-  Eigen::MatrixXd covariance;
+  Eigen::Vector3d position;
+  Eigen::Vector3d velocity;
+  Eigen::Matrix3d covariance;
+  Eigen::Matrix3d covariance_vel;
 };
 
 class Landmark {
@@ -106,12 +116,12 @@ public:
   InEKF(const RobotState &state, const NoiseParams &params)
       : state_(state), noise_params_(params) {}
 
-  RobotState getState();
-  const NoiseParams getNoiseParams();
-  const mapIntVector3d getPriorLandmarks();
-  const std::map<int, int> getEstimatedLandmarks();
-  const std::map<int, bool> getContacts();
-  const std::map<int, int> getEstimatedContactPositions();
+  const RobotState &getState() const;
+  const NoiseParams &getNoiseParams() const;
+  const mapIntVector3d &getPriorLandmarks() const;
+  const std::map<int, int> getEstimatedLandmarks() const;
+  const std::map<int, bool> getContacts() const;
+  const std::map<int, int> getEstimatedContactPositions() const;
 
   void setState(const RobotState &state);
   void setNoiseParams(const NoiseParams &params);
@@ -133,10 +143,6 @@ private:
   std::map<int, int> estimated_landmarks_;
   std::map<int, bool> contacts_;
   std::map<int, int> estimated_contact_positions_;
-#if INEKF_USE_MUTEX
-  std::mutex estimated_contacts_mutex_;
-  std::mutex estimated_landmarks_mutex_;
-#endif
 };
 
 } // namespace inekf

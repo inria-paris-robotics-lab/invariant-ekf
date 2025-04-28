@@ -19,14 +19,14 @@ using namespace std;
 
 const double TOLERANCE = 1e-10;
 
-Eigen::Matrix3d skew(const Eigen::Vector3d &v) {
+Eigen::Matrix3d skew(Eigen::Ref<const Eigen::Vector3d> v) {
   // Convert vector to skew-symmetric matrix
   Eigen::Matrix3d M = Eigen::Matrix3d::Zero();
   M << 0, -v[2], v[1], v[2], 0, -v[0], -v[1], v[0], 0;
   return M;
 }
 
-Eigen::Matrix3d exp_SO3(const Eigen::Vector3d &w) {
+Eigen::Matrix3d exp_SO3(Eigen::Ref<const Eigen::Vector3d> w) {
   // Computes the vectorized exponential map for SO(3)
   Eigen::Matrix3d A = skew(w);
   double theta = w.norm();
@@ -38,7 +38,7 @@ Eigen::Matrix3d exp_SO3(const Eigen::Vector3d &w) {
   return R;
 }
 
-Eigen::MatrixXd exp_SEK3(const Eigen::VectorXd &v) {
+Eigen::MatrixXd exp_SEK3(Eigen::Ref<const Eigen::VectorXd> v) {
   // Computes the vectorized exponential map for SE_K(3)
   long K = (v.size() - 3) / 3;
   Eigen::MatrixXd X = Eigen::MatrixXd::Identity(3 + K, 3 + K);
@@ -67,7 +67,7 @@ Eigen::MatrixXd exp_SEK3(const Eigen::VectorXd &v) {
   return X;
 }
 
-Eigen::MatrixXd adjoint_SEK3(const Eigen::MatrixXd &X) {
+Eigen::MatrixXd adjoint_SEK3(Eigen::Ref<const Eigen::MatrixXd> X) {
   // Compute Adjoint(X) for X in SE_K(3)
   long K = X.cols() - 3;
   Eigen::MatrixXd Adj = Eigen::MatrixXd::Zero(3 + 3 * K, 3 + 3 * K);

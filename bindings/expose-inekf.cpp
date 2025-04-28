@@ -32,10 +32,14 @@ void exposeInEKF() {
 
   bp::class_<Kinematics>("Kinematics")
       .def(bp::init<>())
-      .def(bp::init<int, const Eigen::MatrixXd &, const Eigen::MatrixXd &>())
+      .def(bp::init<int, const Eigen::Vector3d &, const Eigen::Matrix3d &>())
+      .def(bp::init<int, const Eigen::Vector3d &, const Eigen::Matrix3d &,
+                    const Eigen::Vector3d &, const Eigen::Matrix3d &>())
       .def_readwrite("id", &Kinematics::id)
-      .def_readwrite("pose", &Kinematics::pose)
-      .def_readwrite("covariance", &Kinematics::covariance);
+      .def_readwrite("position", &Kinematics::position)
+      .def_readwrite("velocity", &Kinematics::velocity)
+      .def_readwrite("covariance", &Kinematics::covariance)
+      .def_readwrite("covariance_vel", &Kinematics::covariance_vel);
 
   bp::class_<InEKF>("InEKF")
       .def(bp::init<>())
@@ -43,9 +47,12 @@ void exposeInEKF() {
       .def(bp::init<const RobotState &>())
       .def(bp::init<const RobotState &, const NoiseParams &>())
 
-      .def("getState", &InEKF::getState)
-      .def("getNoiseParams", &InEKF::getNoiseParams)
-      .def("getPriorLandmarks", &InEKF::getPriorLandmarks)
+      .def("getState", &InEKF::getState, bp::args("self"),
+           bp::return_internal_reference<>())
+      .def("getNoiseParams", &InEKF::getNoiseParams, bp::args("self"),
+           bp::return_internal_reference<>())
+      .def("getPriorLandmarks", &InEKF::getPriorLandmarks, bp::args("self"),
+           bp::return_internal_reference<>())
       .def("getEstimatedLandmarks", &InEKF::getEstimatedLandmarks)
       .def("getContacts", &InEKF::getContacts)
       .def("getEstimatedContactPositions", &InEKF::getEstimatedContactPositions)

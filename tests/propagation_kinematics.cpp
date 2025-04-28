@@ -19,11 +19,11 @@
 #include <Eigen/StdVector>
 #include <boost/algorithm/string.hpp>
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <chrono>
 
 #define DT_MIN 1e-6
 #define DT_MAX 1
@@ -108,7 +108,9 @@ BOOST_AUTO_TEST_CASE(kinematics) {
         end2 = std::chrono::steady_clock::now();
       }
       nb_measures_imu += 1;
-      sum_imu += std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2).count();
+      sum_imu +=
+          std::chrono::duration_cast<std::chrono::microseconds>(end2 - begin2)
+              .count();
 
     } else if (measurement[0].compare("CONTACT") == 0) {
       // cout << "Received CONTACT Data, setting filter's contact state\n";
@@ -130,9 +132,8 @@ BOOST_AUTO_TEST_CASE(kinematics) {
       assert((measurement.size() - 2) % 44 == 0);
       int id;
       Eigen::Quaternion<double> q;
-      Eigen::Vector3d p;
-      Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
-      Eigen::Matrix<double, 6, 6> covariance;
+      Eigen::Vector3d position;
+      Eigen::Matrix3d covariance;
       vectorKinematics measured_kinematics;
       t = stod98(measurement[1]);
       // Read in kinematic data
@@ -142,24 +143,27 @@ BOOST_AUTO_TEST_CASE(kinematics) {
             stod98(measurement[i + 1]), stod98(measurement[i + 2]),
             stod98(measurement[i + 3]), stod98(measurement[i + 4]));
         q.normalize();
-        p << stod98(measurement[i + 5]), stod98(measurement[i + 6]),
+        position << stod98(measurement[i + 5]), stod98(measurement[i + 6]),
             stod98(measurement[i + 7]);
-        pose.block<3, 3>(0, 0) = q.toRotationMatrix();
-        pose.block<3, 1>(0, 3) = p;
-        for (size_t j = 0; j < 6; ++j) {
-          for (size_t k = 0; k < 6; ++k) {
-            covariance((long)j, (long)k) =
+        for (size_t j = 3; j < 6; ++j) {
+          for (size_t k = 3; k < 6; ++k) {
+            covariance((long)(j - 3), (long)(k - 3)) =
                 stod98(measurement[i + 8 + j * 6 + k]);
           }
         }
-        Kinematics frame(id, pose, covariance);
+
+        Kinematics frame(id, position, covariance);
         measured_kinematics.push_back(frame);
       }
       // Correct state using kinematic measurements
-      std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+      std::chrono::steady_clock::time_point begin =
+          std::chrono::steady_clock::now();
       filter.correctKinematics(measured_kinematics);
-      std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-      sum_kinematics += std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+      std::chrono::steady_clock::time_point end =
+          std::chrono::steady_clock::now();
+      sum_kinematics +=
+          std::chrono::duration_cast<std::chrono::microseconds>(end - begin)
+              .count();
       nb_measures_kin += 1;
     }
 
@@ -167,7 +171,8 @@ BOOST_AUTO_TEST_CASE(kinematics) {
     t_prev = t;
     imu_measurement_prev = imu_measurement;
   }
-  double mean_kinematics_time = (double)sum_kinematics / (double)nb_measures_kin;
+  double mean_kinematics_time =
+      (double)sum_kinematics / (double)nb_measures_kin;
   double mean_imu_time = (double)sum_imu / (double)nb_measures_imu;
 
   // Final state should be
@@ -180,8 +185,8 @@ BOOST_AUTO_TEST_CASE(kinematics) {
   // Print final state
   cout << "final state " << filter.getState() << endl;
   BOOST_CHECK(Xref.isApprox(filter.getState().getX(), TOLERANCE));
-  std::cout << "Mean kinematics time is " << mean_kinematics_time << std::endl;
-  std::cout << "Mean imu time is " << mean_imu_time << std::endl;
+  std::cout << "Mean correct time is " << mean_kinematics_time << std::endl;
+  std::cout << "Mean propagate time is " << mean_imu_time << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
