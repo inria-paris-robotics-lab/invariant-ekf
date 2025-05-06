@@ -18,9 +18,9 @@
 #include <map>
 #include <vector>
 
+#include "inekf/LieGroup.hpp"
 #include "inekf/NoiseParams.hpp"
 #include "inekf/RobotState.hpp"
-#include "inekf/LieGroup.hpp"
 
 namespace inekf {
 

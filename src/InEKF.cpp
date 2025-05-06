@@ -64,8 +64,8 @@ void InEKF::setContacts(std::vector<std::pair<int, bool>> contacts) {
 }
 
 // Sets gravity
-void InEKF::setGravity(const Eigen::Vector3d &gravity) { 
-  g_ = gravity; 
+void InEKF::setGravity(const Eigen::Vector3d &gravity) {
+  g_ = gravity;
   Skew_g_ = skew(g_);
 }
 
@@ -335,11 +335,11 @@ void InEKF::correctLandmarks(const vectorLandmarks &measured_landmarks) {
       Eigen::MatrixXd F =
           Eigen::MatrixXd::Zero(state_.dimP() + 3, state_.dimP());
       F.block(0, 0, dimPTheta,
-              dimPTheta).setIdentity(); // for old X
+              dimPTheta).setIdentity();          // for old X
       F.block(dimPTheta, 6, 3, 3).setIdentity(); // for new landmark
-      F.block(dimPTheta + 3,
-              dimPTheta, state_.dimTheta(),
-              state_.dimTheta()).setIdentity(); // for theta
+      F.block(dimPTheta + 3, dimPTheta, state_.dimTheta(),
+              state_.dimTheta())
+          .setIdentity(); // for theta
       Eigen::MatrixXd G = Eigen::MatrixXd::Zero(F.rows(), 3);
       G.block(G.rows() - state_.dimTheta() - 3, 0, 3, 3) = R;
       P_aug = (F * P_aug * F.transpose() +
@@ -432,12 +432,13 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
         H.conservativeResize(startIndex + 3, dimP);
         H.block(startIndex, 0, 3, dimP).setZero();
         H.block(startIndex, 6, 3, 3) = -Eigen::Matrix3d::Identity(); // -I
-        H.block(startIndex, 3 * it_estimated->second - 6, 3, 3).setIdentity(); // I
+        H.block(startIndex, 3 * it_estimated->second - 6, 3, 3)
+            .setIdentity(); // I
 
         // Fill out N
         startIndex = N.rows();
         N.conservativeResize(startIndex + 3, startIndex + 3);
-        N.block(startIndex, 0, 3, startIndex).setZero(); 
+        N.block(startIndex, 0, 3, startIndex).setZero();
         N.block(0, startIndex, startIndex, 3).setZero();
         N.block(startIndex, startIndex, 3, 3) =
             R * it->covariance * R.transpose();
@@ -571,11 +572,11 @@ void InEKF::correctKinematics(const vectorKinematics &measured_kinematics) {
       Eigen::MatrixXd F =
           Eigen::MatrixXd::Zero(state_.dimP() + 3, state_.dimP());
       F.block(0, 0, dimPTheta,
-              dimPTheta).setIdentity(); // for old X
+              dimPTheta).setIdentity();          // for old X
       F.block(dimPTheta, 6, 3, 3).setIdentity(); // for new landmark
-      F.block(dimPTheta + 3,
-              dimPTheta, state_.dimTheta(),
-              state_.dimTheta()).setIdentity(); // for theta
+      F.block(dimPTheta + 3, dimPTheta, state_.dimTheta(),
+              state_.dimTheta())
+          .setIdentity(); // for theta
 
       Eigen::MatrixXd G = Eigen::MatrixXd::Zero(F.rows(), 3);
       G.block(G.rows() - state_.dimTheta() - 3, 0, 3, 3) = R;
