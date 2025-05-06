@@ -20,6 +20,7 @@
 
 #include "inekf/NoiseParams.hpp"
 #include "inekf/RobotState.hpp"
+#include "inekf/LieGroup.hpp"
 
 namespace inekf {
 
@@ -139,6 +140,7 @@ private:
   RobotState state_;
   NoiseParams noise_params_;
   Eigen::Vector3d g_ = Eigen::Vector3d(0, 0, -9.81); // Gravity
+  Eigen::Matrix3d Skew_g_ = skew(g_);
   mapIntVector3d prior_landmarks_;
   std::map<int, int> estimated_landmarks_;
   std::map<int, bool> contacts_;
