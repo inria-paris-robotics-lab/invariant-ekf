@@ -1,5 +1,5 @@
 # inekf
-This repository contains a C++ library that implements an invariant extended Kalman filter (InEKF) for 3D aided inertial navigation. 
+This repository contains a C++ library that implements an invariant extended Kalman filter (InEKF) for 3D aided inertial navigation.
 
 [![InEKF LiDAR Mapping](https://i.imgur.com/BwtIepo.jpg)](https://www.youtube.com/watch?v=pNyXsZ5zVZk)
 
@@ -25,13 +25,13 @@ A ROS wrapper for the filter is available at [https://github.com/RossHartley/inv
 ### Installation Using CMake
 ```
 mkdir build
-cd build 
-cmake .. 
+cd build
+cmake ..
 make
-``` 
+```
 invariant-ekf can be easily included in your cmake project by adding the following to your CMakeLists.txt:
 ```
-find_package(inekf) 
+find_package(inekf)
 include_directories(${inekf_INCLUDE_DIRS})
 ```
 
@@ -40,18 +40,18 @@ include_directories(${inekf_INCLUDE_DIRS})
 2. A contact-aided inertial navigation example is provided at `src/examples/kinematics.cpp`
 
 ## Citations
-The contact-aided invariant extended Kalman filter is described in: 
+The contact-aided invariant extended Kalman filter is described in:
 * R. Hartley, M. G. Jadidi, J. Grizzle, and R. M. Eustice, “Contact-aided invariant extended kalman filtering for legged robot state estimation,” in Proceedings of Robotics: Science and Systems, Pittsburgh, Pennsylvania, June 2018.
 ```
-@INPROCEEDINGS{Hartley-RSS-18, 
-    AUTHOR    = {Ross Hartley AND Maani Ghaffari Jadidi AND Jessy Grizzle AND Ryan M Eustice}, 
-    TITLE     = {Contact-Aided Invariant Extended Kalman Filtering for Legged Robot State Estimation}, 
-    BOOKTITLE = {Proceedings of Robotics: Science and Systems}, 
-    YEAR      = {2018}, 
-    ADDRESS   = {Pittsburgh, Pennsylvania}, 
-    MONTH     = {June}, 
-    DOI       = {10.15607/RSS.2018.XIV.050} 
-} 
+@INPROCEEDINGS{Hartley-RSS-18,
+    AUTHOR    = {Ross Hartley AND Maani Ghaffari Jadidi AND Jessy Grizzle AND Ryan M Eustice},
+    TITLE     = {Contact-Aided Invariant Extended Kalman Filtering for Legged Robot State Estimation},
+    BOOKTITLE = {Proceedings of Robotics: Science and Systems},
+    YEAR      = {2018},
+    ADDRESS   = {Pittsburgh, Pennsylvania},
+    MONTH     = {June},
+    DOI       = {10.15607/RSS.2018.XIV.050}
+}
 ```
 The core theory of invariant extended Kalman filtering is presented in:
 * Barrau, Axel, and Silvère Bonnabel. "The invariant extended Kalman filter as a stable observer." IEEE Transactions on Automatic Control 62.4 (2017): 1797-1812.
