@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 # Project properties
 set(PROJECT_NAME inekf)
 set(PROJECT_DESCRIPTION "Invariant EKF")
-set(PROJECT_URL https://github.com/edantec/invariant-ekf)
+set(PROJECT_URL https://github.com/inria-paris-robotics-lab/invariant-ekf)
 set(PROJECT_CUSTOM_HEADER_DIR "inekf")
 set(PROJECT_CUSTOM_HEADER_EXTENSION "hpp")
 

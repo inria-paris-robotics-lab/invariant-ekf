@@ -1,6 +1,3 @@
-[submodule "simple-mpc"]
-	path = simple-mpc
-	url = https://github.com/Simple-Robotics/simple-mpc.git
 [submodule "cmake"]
 	path = cmake
 	url = https://github.com/jrl-umi3218/jrl-cmakemodules.git
